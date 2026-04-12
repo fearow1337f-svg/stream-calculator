@@ -140,45 +140,7 @@
 </div>
                 
                 <div class="watched-scroll">
-                    <div class="watched-card-compact">
-                        <img src="https://image.tmdb.org/t/p/w200/8uO0UM2rXpG7N4G8qKj0h6qW2N.jpg" alt="Дюна 2" class="watched-poster-compact">
-                        <div class="watched-info-compact">
-                            <span class="watched-title-compact">Дюна 2</span>
-                            <span class="watched-meta-compact">08.04 • @ViewerOne</span>
-                        </div>
-                    </div>
-                    
-                    <div class="watched-card-compact">
-                        <img src="https://image.tmdb.org/t/p/w200/8Vt6mWEReuy4Of61Lnj5Xj704m8.jpg" alt="Оппенгеймер" class="watched-poster-compact">
-                        <div class="watched-info-compact">
-                            <span class="watched-title-compact">Оппенгеймер</span>
-                            <span class="watched-meta-compact">05.04 • @ViewerTwo</span>
-                        </div>
-                    </div>
-                    
-                    <div class="watched-card-compact">
-                        <img src="https://image.tmdb.org/t/p/w200/qNBAXBIQlnOThrVvA6mA2B5ggV6.jpg" alt="Бедные-несчастные" class="watched-poster-compact">
-                        <div class="watched-info-compact">
-                            <span class="watched-title-compact">Бедные-несчастные</span>
-                            <span class="watched-meta-compact">01.04 • @ViewerThree</span>
-                        </div>
-                    </div>
-                    
-                    <div class="watched-card-compact">
-                        <img src="https://image.tmdb.org/t/p/w200/4j0PNHkMr5ax3IA8tjtxcmPU3QT.jpg" alt="Дэдпул 3" class="watched-poster-compact">
-                        <div class="watched-info-compact">
-                            <span class="watched-title-compact">Дэдпул 3</span>
-                            <span class="watched-meta-compact">28.03 • @ViewerFour</span>
-                        </div>
-                    </div>
-                    
-                    <div class="watched-card-compact">
-                        <img src="https://image.tmdb.org/t/p/w200/gEU2QniE6E77NI6lCU6MxlNBvIx.jpg" alt="Интерстеллар" class="watched-poster-compact">
-                        <div class="watched-info-compact">
-                            <span class="watched-title-compact">Интерстеллар</span>
-                            <span class="watched-meta-compact">22.03 • @ViewerFive</span>
-                        </div>
-                    </div>
+                    <!-- Фильмы загружаются автоматически из админки -->
                 </div>
                 
                 <p class="watched-note-compact">💜 Записи в Telegram</p>
@@ -196,5 +158,95 @@
 
     <!-- Подключаем JavaScript -->
     <script src="script.js"></script>
+
+    <!-- Скрипт для загрузки просмотренных фильмов из админки -->
+    <script>
+    async function loadWatchedMovies() {
+        try {
+            const response = await fetch('/_data/watched/');
+            const text = await response.text();
+            
+            const parser = new DOMParser();
+            const doc = parser.parseFromString(text, 'text/html');
+            const links = doc.querySelectorAll('a');
+            
+            const movies = [];
+            
+            for (const link of links) {
+                const href = link.getAttribute('href');
+                if (href && (href.endsWith('.md') || href.endsWith('.yml') || href.endsWith('.json'))) {
+                    const fileResponse = await fetch(`/_data/watched/${href}`);
+                    const content = await fileResponse.text();
+                    
+                    let movieData = {};
+                    
+                    if (href.endsWith('.md')) {
+                        const match = content.match(/---\n([\s\S]*?)\n---/);
+                        if (match) {
+                            const lines = match[1].split('\n');
+                            for (const line of lines) {
+                                const colonIndex = line.indexOf(':');
+                                if (colonIndex > 0) {
+                                    const key = line.substring(0, colonIndex).trim();
+                                    const value = line.substring(colonIndex + 1).trim();
+                                    movieData[key] = value;
+                                }
+                            }
+                        }
+                    }
+                    
+                    if (movieData.searchTitle || movieData.title) {
+                        movies.push(movieData);
+                    }
+                }
+            }
+            
+            renderWatchedMovies(movies);
+            
+        } catch (error) {
+            console.error('Ошибка загрузки просмотренных фильмов:', error);
+            const container = document.querySelector('.watched-scroll');
+            if (container) {
+                container.innerHTML = '<p style="color: #888; text-align: center; width: 100%;">Пока нет просмотренных фильмов</p>';
+            }
+        }
+    }
+
+    function renderWatchedMovies(movies) {
+        const container = document.querySelector('.watched-scroll');
+        if (!container) return;
+        
+        container.innerHTML = '';
+        
+        if (movies.length === 0) {
+            container.innerHTML = '<p style="color: #888; text-align: center; width: 100%;">Пока нет просмотренных фильмов</p>';
+            return;
+        }
+        
+        movies.sort((a, b) => (b.date || '').localeCompare(a.date || ''));
+        
+        for (const movie of movies) {
+            const card = document.createElement('div');
+            card.className = 'watched-card-compact';
+            
+            const posterUrl = movie.poster || 'https://via.placeholder.com/45x65/1a1a2e/ffffff?text=?';
+            const title = movie.searchTitle || movie.title || 'Без названия';
+            const viewer = movie.viewer || '@зритель';
+            const date = movie.date ? movie.date.split('-').reverse().slice(0, 2).join('.') : '????';
+            
+            card.innerHTML = `
+                <img src="${posterUrl}" alt="${title}" class="watched-poster-compact" onerror="this.src='https://via.placeholder.com/45x65/1a1a2e/ffffff?text=?'">
+                <div class="watched-info-compact">
+                    <span class="watched-title-compact">${title}</span>
+                    <span class="watched-meta-compact">${date} • ${viewer}</span>
+                </div>
+            `;
+            
+            container.appendChild(card);
+        }
+    }
+
+    document.addEventListener('DOMContentLoaded', loadWatchedMovies);
+    </script>
 </body>
 </html>
