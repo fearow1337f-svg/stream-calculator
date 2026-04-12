@@ -1,6 +1,0 @@
-[[redirects]]
-  from = "/api/kinopoisk/*"
-  to = "https://api.kinopoisk.dev/:splat"
-  status = 200
-  force = true
-  headers = {X-API-KEY = "2VQWGV7-HE34AP1-GBVSWZ1-QDSW6FZ"}
