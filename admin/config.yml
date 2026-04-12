@@ -1,18 +1,19 @@
 backend:
   name: git-gateway
-  branch: main # Убедись, что ветка называется так же, как в твоём репозитории
+  branch: main
 
-media_folder: "images/uploads" # Место для хранения картинок
+media_folder: "images/uploads"
 public_folder: "/images/uploads"
 
 collections:
-  - name: "watched" # Раздел для просмотренных фильмов
+  - name: "watched"
     label: "Просмотренные фильмы"
     folder: "_data/watched"
     create: true
     slug: "{{slug}}"
     fields:
-      - { label: "Название фильма", name: "title", widget: "string" }
+      - { label: "Название фильма для поиска", name: "searchTitle", widget: "string", hint: "Введи точное название, как на Кинопоиске" }
       - { label: "Дата просмотра", name: "date", widget: "date" }
       - { label: "Ник заказчика", name: "viewer", widget: "string" }
-      - { label: "Постер", name: "poster", widget: "image" }
+      - { label: "Постер", name: "poster", widget: "image", required: false }
+      - { label: "ID Кинопоиска", name: "kinopoiskId", widget: "string", required: false }
