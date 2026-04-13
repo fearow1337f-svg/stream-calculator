@@ -162,53 +162,55 @@
     <!-- Скрипт для загрузки просмотренных фильмов из админки -->
     <script>
     async function loadWatchedMovies() {
+        const container = document.querySelector('.watched-scroll');
+        if (!container) return;
+
         try {
-            const response = await fetch('/_data/watched/');
-            const text = await response.text();
+            // Загружаем список файлов через API GitHub
+            const apiUrl = 'https://api.github.com/repos/fearow1337f-svg/stream-calculator/contents/_data/watched';
+            const response = await fetch(apiUrl);
             
-            const parser = new DOMParser();
-            const doc = parser.parseFromString(text, 'text/html');
-            const links = doc.querySelectorAll('a');
+            if (!response.ok) {
+                throw new Error(`GitHub API error: ${response.status}`);
+            }
             
+            const files = await response.json();
             const movies = [];
             
-            for (const link of links) {
-                const href = link.getAttribute('href');
-                if (href && (href.endsWith('.md') || href.endsWith('.yml') || href.endsWith('.json'))) {
-                    const fileResponse = await fetch(`/_data/watched/${href}`);
-                    const content = await fileResponse.text();
-                    
-                    let movieData = {};
-                    
-                    if (href.endsWith('.md')) {
-                        const match = content.match(/---\n([\s\S]*?)\n---/);
-                        if (match) {
-                            const lines = match[1].split('\n');
-                            for (const line of lines) {
-                                const colonIndex = line.indexOf(':');
-                                if (colonIndex > 0) {
-                                    const key = line.substring(0, colonIndex).trim();
-                                    const value = line.substring(colonIndex + 1).trim();
-                                    movieData[key] = value;
-                                }
-                            }
-                        }
+            for (const file of files) {
+                // Пропускаем не-MD файлы
+                if (!file.name.endsWith('.md')) continue;
+                
+                // Загружаем содержимое файла
+                const contentResponse = await fetch(file.download_url);
+                const content = await contentResponse.text();
+                
+                // Извлекаем данные из frontmatter
+                const match = content.match(/---\n([\s\S]*?)\n---/);
+                if (!match) continue;
+                
+                const lines = match[1].split('\n');
+                const movie = {};
+                
+                for (const line of lines) {
+                    const colonIndex = line.indexOf(':');
+                    if (colonIndex > 0) {
+                        const key = line.substring(0, colonIndex).trim();
+                        const value = line.substring(colonIndex + 1).trim();
+                        movie[key] = value;
                     }
-                    
-                    if (movieData.searchTitle || movieData.title) {
-                        movies.push(movieData);
-                    }
+                }
+                
+                if (movie.searchTitle || movie.title) {
+                    movies.push(movie);
                 }
             }
             
             renderWatchedMovies(movies);
             
         } catch (error) {
-            console.error('Ошибка загрузки просмотренных фильмов:', error);
-            const container = document.querySelector('.watched-scroll');
-            if (container) {
-                container.innerHTML = '<p style="color: #888; text-align: center; width: 100%;">Пока нет просмотренных фильмов</p>';
-            }
+            console.error('Ошибка загрузки:', error);
+            container.innerHTML = '<p style="color: #888; text-align: center; width: 100%;">Пока нет просмотренных фильмов</p>';
         }
     }
 
@@ -223,6 +225,7 @@
             return;
         }
         
+        // Сортируем по дате (новые сверху)
         movies.sort((a, b) => (b.date || '').localeCompare(a.date || ''));
         
         for (const movie of movies) {
