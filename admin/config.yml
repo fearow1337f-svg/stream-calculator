@@ -2,7 +2,7 @@ backend:
   name: github
   repo: fearowl337f-svg/stream-calculator
   branch: main
-  base_url: https://stream-calculator-4u3.pages.dev
+  base_url: https://stream-calculator.pages.dev
   auth_endpoint: /oauth/auth
 
 media_folder: "images/uploads"
