@@ -2,11 +2,18 @@
 CMS.registerEventListener({
     name: 'preSave',
     handler: async ({ entry }) => {
-        const searchTitle = entry.get('data').get('searchTitle');
-        const currentPoster = entry.get('data').get('poster');
+        // Получаем данные из правильного места
+        const data = entry.get('data');
+        const searchTitle = data.get('searchTitle');
+        const currentPoster = data.get('poster');
+        
+        console.log('preSave сработал!');
+        console.log('searchTitle:', searchTitle);
+        console.log('currentPoster:', currentPoster);
         
         // Если постер уже есть или название не введено — ничего не делаем
         if (currentPoster || !searchTitle || searchTitle.length < 2) {
+            console.log('Пропускаем — постер уже есть или название короткое');
             return;
         }
         
@@ -17,17 +24,19 @@ CMS.registerEventListener({
             const response = await fetch(`/get-poster?query=${encodeURIComponent(searchTitle)}`);
             const data = await response.json();
             
+            console.log('Ответ от API:', data);
+            
             if (data.poster) {
                 // Устанавливаем URL постера
-                entry.get('data').set('poster', data.poster);
+                data.set('poster', data.poster);
                 console.log('Постер установлен:', data.poster);
             }
             
             if (data.kinopoiskId) {
-                entry.get('data').set('kinopoiskId', data.kinopoiskId.toString());
+                data.set('kinopoiskId', data.kinopoiskId.toString());
             }
         } catch (error) {
-            console.warn('Не удалось загрузить постер:', error);
+            console.error('Ошибка при загрузке постера:', error);
         }
     }
 });
