@@ -17,16 +17,12 @@ collections:
     fields:
       - label: "Название фильма"
         name: "searchTitle"
-        widget: "string"
-        hint: "Введи точное название, как на Кинопоиске. Постер подгрузится автоматически."
-        pattern: [".{2,}", "Название должно быть не короче 2 символов"]
+        widget: "autoposter"
+        hint: "Введи точное название. После ввода нажми Tab — постер подгрузится сам."
       - label: "Постер"
         name: "poster"
         widget: "image"
         required: false
-        media_library:
-          config:
-            multiple: false
       - label: "Дата просмотра"
         name: "date"
         widget: "date"
