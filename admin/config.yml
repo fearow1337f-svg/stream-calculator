@@ -2,8 +2,8 @@ backend:
   name: github
   repo: fearowl337f-svg/stream-calculator
   branch: main
-  base_url: https://api.decapcms.org
-  auth_endpoint: /auth
+  base_url: https://stream-calculator-4u3.pages.dev
+  auth_endpoint: /oauth/auth
 
 media_folder: "images/uploads"
 public_folder: "/images/uploads"
