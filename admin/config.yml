@@ -15,8 +15,25 @@ collections:
     create: true
     slug: "{{slug}}"
     fields:
-      - { label: "Название фильма для поиска", name: "searchTitle", widget: "string", hint: "Введи точное название, как на Кинопоиске" }
-      - { label: "Дата просмотра", name: "date", widget: "date" }
-      - { label: "Ник заказчика", name: "viewer", widget: "string" }
-      - { label: "Постер", name: "poster", widget: "image", required: false }
-      - { label: "ID Кинопоиска", name: "kinopoiskId", widget: "string", required: false }
+      - label: "Название фильма"
+        name: "searchTitle"
+        widget: "string"
+        hint: "Введи точное название, как на Кинопоиске. Постер подгрузится автоматически."
+        pattern: [".{2,}", "Название должно быть не короче 2 символов"]
+      - label: "Постер"
+        name: "poster"
+        widget: "image"
+        required: false
+        media_library:
+          config:
+            multiple: false
+      - label: "Дата просмотра"
+        name: "date"
+        widget: "date"
+      - label: "Ник заказчика"
+        name: "viewer"
+        widget: "string"
+      - label: "ID Кинопоиска"
+        name: "kinopoiskId"
+        widget: "string"
+        required: false
