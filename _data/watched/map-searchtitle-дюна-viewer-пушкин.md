@@ -1,4 +1,0 @@
----
-searchTitle: дюна
-viewer: пушкин
----
