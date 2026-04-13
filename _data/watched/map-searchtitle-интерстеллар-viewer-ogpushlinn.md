@@ -1,4 +1,0 @@
----
-searchTitle: Интерстеллар
-viewer: ogpushlinn
----
