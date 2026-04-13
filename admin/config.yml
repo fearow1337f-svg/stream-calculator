@@ -2,7 +2,7 @@ backend:
   name: github
   repo: fearowl337f-svg/stream-calculator
   branch: main
-  base_url: https://api.decapcms.org
+  base_url: https://decap-cms-oauth.vercel.app
   auth_endpoint: /auth
 
 media_folder: "images/uploads"
