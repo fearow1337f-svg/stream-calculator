@@ -1,44 +1,72 @@
-// Ждём загрузки CMS
-CMS.registerEventListener({
-    name: 'preSave',
-    handler: async ({ entry }) => {
-        // Получаем данные из правильного места
-        const data = entry.get('data');
-        const searchTitle = data.get('searchTitle');
-        const currentPoster = data.get('poster');
-        
-        console.log('preSave сработал!');
-        console.log('searchTitle:', searchTitle);
-        console.log('currentPoster:', currentPoster);
-        
-        // Если постер уже есть или название не введено — ничего не делаем
-        if (currentPoster || !searchTitle || searchTitle.length < 2) {
-            console.log('Пропускаем — постер уже есть или название короткое');
-            return;
-        }
-        
+// Кастомный виджет для автоподгрузки постера
+const AutoPosterControl = createClass({
+    getInitialState() {
+        return { isLoading: false, error: null };
+    },
+
+    async fetchPoster() {
+        const searchTitle = this.props.value;
+        if (!searchTitle || searchTitle.length < 2) return;
+
+        this.setState({ isLoading: true, error: null });
+
         try {
-            console.log('Ищу постер для:', searchTitle);
-            
-            // Вызываем нашу функцию
             const response = await fetch(`/get-poster?query=${encodeURIComponent(searchTitle)}`);
             const data = await response.json();
-            
-            console.log('Ответ от API:', data);
-            
+
             if (data.poster) {
-                // Устанавливаем URL постера
-                data.set('poster', data.poster);
-                console.log('Постер установлен:', data.poster);
-            }
-            
-            if (data.kinopoiskId) {
-                data.set('kinopoiskId', data.kinopoiskId.toString());
+                // Обновляем поле poster в форме
+                const posterField = this.props.entry.get('data').get('poster');
+                if (!posterField) {
+                    this.props.entry.get('data').set('poster', data.poster);
+                }
+                
+                // Обновляем ID Кинопоиска
+                if (data.kinopoiskId) {
+                    this.props.entry.get('data').set('kinopoiskId', data.kinopoiskId.toString());
+                }
+
+                console.log('✅ Постер найден:', data.poster);
+            } else {
+                this.setState({ error: 'Фильм не найден' });
             }
         } catch (error) {
-            console.error('Ошибка при загрузке постера:', error);
+            console.error('Ошибка:', error);
+            this.setState({ error: 'Ошибка загрузки' });
+        } finally {
+            this.setState({ isLoading: false });
         }
+    },
+
+    render() {
+        const { value, onChange } = this.props;
+        const { isLoading, error } = this.state;
+
+        return h('div', {},
+            h('input', {
+                type: 'text',
+                value: value || '',
+                placeholder: 'Введите название фильма',
+                onChange: (e) => onChange(e.target.value),
+                onBlur: () => this.fetchPoster(),
+                style: {
+                    width: '100%',
+                    padding: '8px 12px',
+                    border: '1px solid #ccc',
+                    borderRadius: '4px',
+                    fontSize: '14px'
+                }
+            }),
+            isLoading && h('span', { style: { marginLeft: '10px', color: '#666' } }, '⏳ Ищу постер...'),
+            error && h('span', { style: { marginLeft: '10px', color: 'red' } }, `❌ ${error}`),
+            h('p', { style: { fontSize: '12px', color: '#666', marginTop: '4px' } }, 
+                'После ввода названия нажмите Tab или кликните вне поля — постер подгрузится автоматически'
+            )
+        );
     }
 });
 
-console.log('🎬 Кастомный скрипт загружен!');
+// Регистрируем кастомный виджет
+CMS.registerWidget('autoposter', AutoPosterControl);
+
+console.log('🎬 Кастомный виджет загружен!');
