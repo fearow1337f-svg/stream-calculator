@@ -66,7 +66,7 @@
             <!-- КАРТОЧКА ФИЛЬМА -->
             <div id="movieCard" class="movie-card hidden">
                 <div class="movie-poster">
-                    <img id="moviePoster" src="" alt="Постер фильма">
+                    <img id="moviePoster" src="" alt="Постер фильма" style="display: none;">
                 </div>
                 <div class="movie-info">
                     <h3 id="movieTitle" class="movie-title">Название фильма</h3>
@@ -166,26 +166,20 @@
         if (!container) return;
 
         try {
-            // Загружаем список файлов через API GitHub
             const apiUrl = 'https://api.github.com/repos/fearow1337f-svg/stream-calculator/contents/_data/watched';
             const response = await fetch(apiUrl);
             
-            if (!response.ok) {
-                throw new Error(`GitHub API error: ${response.status}`);
-            }
+            if (!response.ok) throw new Error(`GitHub API error: ${response.status}`);
             
             const files = await response.json();
             const movies = [];
             
             for (const file of files) {
-                // Пропускаем не-MD файлы
                 if (!file.name.endsWith('.md')) continue;
                 
-                // Загружаем содержимое файла
                 const contentResponse = await fetch(file.download_url);
                 const content = await contentResponse.text();
                 
-                // Извлекаем данные из frontmatter
                 const match = content.match(/---\n([\s\S]*?)\n---/);
                 if (!match) continue;
                 
@@ -225,25 +219,33 @@
             return;
         }
         
-        // Сортируем по дате (новые сверху)
         movies.sort((a, b) => (b.date || '').localeCompare(a.date || ''));
         
         for (const movie of movies) {
             const card = document.createElement('div');
             card.className = 'watched-card-compact';
             
-            const posterUrl = movie.poster || 'https://via.placeholder.com/45x65/1a1a2e/ffffff?text=?';
+            const posterUrl = movie.poster || '';
             const title = movie.searchTitle || movie.title || 'Без названия';
             const viewer = movie.viewer || '@зритель';
             const date = movie.date ? movie.date.split('-').reverse().slice(0, 2).join('.') : '????';
             
-            card.innerHTML = `
-                <img src="${posterUrl}" alt="${title}" class="watched-poster-compact" onerror="this.src='https://via.placeholder.com/45x65/1a1a2e/ffffff?text=?'">
-                <div class="watched-info-compact">
-                    <span class="watched-title-compact">${title}</span>
-                    <span class="watched-meta-compact">${date} • ${viewer}</span>
-                </div>
-            `;
+            if (posterUrl) {
+                card.innerHTML = `
+                    <img src="${posterUrl}" alt="${title}" class="watched-poster-compact" onerror="this.style.display='none'">
+                    <div class="watched-info-compact">
+                        <span class="watched-title-compact">${title}</span>
+                        <span class="watched-meta-compact">${date} • ${viewer}</span>
+                    </div>
+                `;
+            } else {
+                card.innerHTML = `
+                    <div class="watched-info-compact" style="margin-left: 0;">
+                        <span class="watched-title-compact">${title}</span>
+                        <span class="watched-meta-compact">${date} • ${viewer}</span>
+                    </div>
+                `;
+            }
             
             container.appendChild(card);
         }
