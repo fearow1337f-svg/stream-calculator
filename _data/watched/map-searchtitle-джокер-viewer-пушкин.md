@@ -1,4 +1,0 @@
----
-searchTitle: джокер
-viewer: пушкин
----
