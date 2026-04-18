@@ -8,5 +8,10 @@
 <body>
   <!-- Подключаем скрипт CMS -->
   <script src="https://unpkg.com/decap-cms@^3.0.0/dist/decap-cms.js"></script>
+  <!-- Подключаем виджет даты (встроен, но нужно явно указать) -->
+  <script>
+    // Регистрируем стандартные виджеты
+    CMS.registerWidget('date', CMS.getWidget('date'));
+  </script>
 </body>
 </html>
