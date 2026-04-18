@@ -688,4 +688,12 @@ a {
     }
     
     .logo {
-        font
+        font-size: 1.6rem;
+        justify-content: center;
+        text-align: center;
+    }
+    
+    .social-grid {
+        flex-wrap: wrap;
+    }
+}
