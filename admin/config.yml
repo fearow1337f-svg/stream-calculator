@@ -20,3 +20,27 @@ collections:
       - { label: "Дата просмотра", name: "date", widget: "date" }
       - { label: "Ник заказчика", name: "viewer", widget: "string" }
       - { label: "ID Кинопоиска", name: "kinopoiskId", widget: "string", required: false }
+
+  - name: "settings"
+    label: "⚙️ Настройки цен"
+    editor:
+      preview: false
+    files:
+      - label: "Параметры калькулятора"
+        name: "pricing"
+        file: "_data/settings/pricing.json"
+        fields:
+          - label: "Базовая стоимость (₽)"
+            name: "basePrice"
+            widget: "number"
+            default: 500
+            value_type: "int"
+            min: 0
+            step: 10
+          - label: "Наценка за длительность > 120 мин (₽)"
+            name: "longMovieSurcharge"
+            widget: "number"
+            default: 20
+            value_type: "int"
+            min: 0
+            step: 5
