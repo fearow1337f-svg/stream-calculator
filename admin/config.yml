@@ -2,7 +2,7 @@ backend:
   name: github
   repo: fearow1337f-svg/stream-calculator
   branch: main
-  base_url: https://decap-cms-oauth.vercel.app
+  base_url: https://api.decapcms.org
   auth_endpoint: /auth
 
 media_folder: "images/uploads"
@@ -15,21 +15,8 @@ collections:
     create: true
     slug: "{{slug}}"
     fields:
-      - label: "Название фильма"
-        name: "searchTitle"
-        widget: "autoposter"
-        hint: "Введи точное название. После ввода нажми Tab — постер подгрузится сам."
-      - label: "Постер"
-        name: "poster"
-        widget: "image"
-        required: false
-      - label: "Дата просмотра"
-        name: "date"
-        widget: "date"
-      - label: "Ник заказчика"
-        name: "viewer"
-        widget: "string"
-      - label: "ID Кинопоиска"
-        name: "kinopoiskId"
-        widget: "string"
-        required: false
+      - { label: "Название фильма", name: "searchTitle", widget: "string", hint: "Введи название фильма" }
+      - { label: "Постер (ссылка)", name: "poster", widget: "string", required: false, hint: "Можешь вставить ссылку на постер (необязательно)" }
+      - { label: "Дата просмотра", name: "date", widget: "date" }
+      - { label: "Ник заказчика", name: "viewer", widget: "string" }
+      - { label: "ID Кинопоиска", name: "kinopoiskId", widget: "string", required: false }
