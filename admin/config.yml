@@ -17,7 +17,7 @@ collections:
     fields:
       - { label: "Название фильма", name: "searchTitle", widget: "string", hint: "Введи название фильма" }
       - { label: "Постер (ссылка)", name: "poster", widget: "string", required: false, hint: "Можешь вставить ссылку на постер (необязательно)" }
-      - { label: "Дата просмотра", name: "date", widget: "date" }
+      - { label: "Дата просмотра", name: "date", widget: "datetime", format: "YYYY-MM-DD", time_format: false }
       - { label: "Ник заказчика", name: "viewer", widget: "string" }
       - { label: "ID Кинопоиска", name: "kinopoiskId", widget: "string", required: false }
 
