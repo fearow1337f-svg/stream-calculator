@@ -1,12 +1,9 @@
 // ===== НАСТРОЙКИ =====
-// Рабочий API-ключ от kinopoiskapiunofficial.tech
 const API_KEY = '3c6501fb-0e64-4d38-9df9-18509d27395e';
-// Базовый URL API
 const BASE_URL = 'https://kinopoiskapiunofficial.tech/api/v2.2';
 
 const STREAMER_NICKNAME = 'Dy2phoria';
 
-// Цены по умолчанию (будут перезаписаны из админки)
 let BASE_PRICE = 500;
 let LONG_MOVIE_SURCHARGE = 20;
 
@@ -20,7 +17,6 @@ async function loadPricingSettings() {
         BASE_PRICE = data.basePrice || 500;
         LONG_MOVIE_SURCHARGE = data.longMovieSurcharge || 20;
         
-        // ОБНОВЛЯЕМ ТЕКСТ НА СТРАНИЦЕ
         const basePriceDisplay = document.getElementById('basePriceDisplay');
         if (basePriceDisplay) {
             basePriceDisplay.textContent = `${BASE_PRICE} ₽`;
@@ -60,7 +56,6 @@ const copyBtn = document.getElementById('copyBtn');
 
 let currentMovie = null;
 
-// Форматирование длительности (из минут в "Xч Yм")
 function formatDuration(minutes) {
     if (!minutes) return '? мин';
     const hours = Math.floor(minutes / 60);
@@ -69,12 +64,10 @@ function formatDuration(minutes) {
     return `${mins} мин`;
 }
 
-// Форматирование денег (разделители тысяч)
 function formatMoney(amount) {
     return amount.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ' ');
 }
 
-// Расчёт цены
 function calculatePrice() {
     if (!currentMovie) return;
     
@@ -99,7 +92,6 @@ function calculatePrice() {
     donateText.value = `${movieName} ${priorityCheckbox.checked ? '(ВНЕ ОЧЕРЕДИ)' : ''}`;
 }
 
-// Поиск фильма
 async function searchMovie(query) {
     if (!query || query.length < 2) {
         showError('Введи хотя бы 2 буквы');
@@ -124,14 +116,11 @@ async function searchMovie(query) {
             }
         });
         
-        if (!response.ok) {
-            throw new Error(`Ошибка ${response.status}`);
-        }
+        if (!response.ok) throw new Error(`Ошибка ${response.status}`);
         
         const data = await response.json();
         
         if (data.items && data.items.length > 0) {
-            // Берём первый фильм и получаем детали
             const film = data.items[0];
             await enrichMovieData(film);
             displayMovie(film);
@@ -148,7 +137,6 @@ async function searchMovie(query) {
     }
 }
 
-// Получение детальной информации о фильме (длительность, страны)
 async function enrichMovieData(film) {
     try {
         const url = new URL(BASE_URL + `/films/${film.kinopoiskId}`);
@@ -172,49 +160,37 @@ async function enrichMovieData(film) {
     }
 }
 
-// Отображение фильма
 function displayMovie(film) {
     currentMovie = film;
     
-    // Постер
     if (film.posterUrl || film.posterUrlPreview) {
         moviePoster.src = film.posterUrl || film.posterUrlPreview;
+        moviePoster.style.display = 'block';
     } else {
-        moviePoster.src = 'https://via.placeholder.com/500x750/1a1a2e/ffffff?text=Нет+постера';
+        moviePoster.style.display = 'none';
     }
     
-    // Название
     movieTitle.textContent = film.nameRu || film.nameOriginal || 'Без названия';
-    
-    // Год
     movieYear.textContent = film.year || '????';
     
-    // Длительность
     const duration = film.filmLength || 0;
     movieDuration.textContent = formatDuration(duration);
     calcDurationMins.textContent = duration;
     
-    // Страна
-    const country = film.countries?.[0]?.country || '—';
-    movieCountry.textContent = country;
+    movieCountry.textContent = film.countries?.[0]?.country || '—';
     
-    // Рейтинг
     const rating = film.ratingKinopoisk?.toFixed(1) || '0.0';
     movieImdb.textContent = rating;
     calcRating.textContent = rating;
     
-    // Ссылки
     movieImdbLink.href = `https://www.imdb.com/find?q=${encodeURIComponent(film.nameRu || film.nameOriginal || '')}`;
     movieKpLink.href = `https://www.kinopoisk.ru/film/${film.kinopoiskId}/`;
     
-    // Описание
     movieOverview.textContent = film.description || film.slogan || 'Описание отсутствует.';
     
-    // Показываем карточку и калькулятор
     movieCard.classList.remove('hidden');
     calculatorBlock.classList.remove('hidden');
     
-    // Считаем цену
     calculatePrice();
 }
 
@@ -232,7 +208,6 @@ function hideError() {
     errorMessage.classList.add('hidden');
 }
 
-// Копирование текста доната
 function copyDonateText() {
     donateText.select();
     donateText.setSelectionRange(0, 99999);
@@ -246,7 +221,6 @@ function copyDonateText() {
     }
 }
 
-// Обработчики событий
 searchBtn.addEventListener('click', () => searchMovie(searchInput.value.trim()));
 searchInput.addEventListener('keypress', (e) => {
     if (e.key === 'Enter') searchMovie(searchInput.value.trim());
@@ -254,7 +228,6 @@ searchInput.addEventListener('keypress', (e) => {
 priorityCheckbox.addEventListener('change', calculatePrice);
 copyBtn.addEventListener('click', copyDonateText);
 
-// Загружаем настройки цен при старте и выводим сообщение
 window.addEventListener('DOMContentLoaded', async () => {
     await loadPricingSettings();
     console.log('🎬 Калькулятор загружен! API: kinopoiskapiunofficial.tech');
