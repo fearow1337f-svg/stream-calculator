@@ -20,6 +20,12 @@ async function loadPricingSettings() {
         BASE_PRICE = data.basePrice || 500;
         LONG_MOVIE_SURCHARGE = data.longMovieSurcharge || 20;
         
+        // ОБНОВЛЯЕМ ТЕКСТ НА СТРАНИЦЕ
+        const basePriceDisplay = document.getElementById('basePriceDisplay');
+        if (basePriceDisplay) {
+            basePriceDisplay.textContent = `${BASE_PRICE} ₽`;
+        }
+        
         console.log('✅ Настройки цен загружены:', { BASE_PRICE, LONG_MOVIE_SURCHARGE });
     } catch (error) {
         console.warn('⚠️ Используются стандартные цены:', error);
