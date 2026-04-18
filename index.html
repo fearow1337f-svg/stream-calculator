@@ -5,7 +5,9 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>🎬 Калькулятор заказов | Dy2phoria</title>
     
-    <!-- Подключаем файл со стилями (дизайн) -->
+    <!-- Шрифт Unbounded -->
+    <link href="https://fonts.googleapis.com/css2?family=Unbounded:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <!-- Подключаем файл со стилями -->
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
@@ -14,14 +16,14 @@
     <header class="header">
         <div class="container">
             <h1 class="logo">
-    <img src="https://static-cdn.jtvnw.net/jtv_user_pictures/dy2phoria-profile_image-70x70.png" 
-         alt="Аватар" 
-         class="logo-avatar"
-         onerror="this.src='https://static-cdn.jtvnw.net/user-default-pictures-uv/ebe4cd89-b4f4-4cd9-adf2-24d6a6c3f4d2-profile_image-70x70.png'">
-    Dy2phoria 
-    <span class="logo-badge">стример</span>
-</h1>
-            <p class="header-subtitle">Закажи фильм на стрим — цена рассчитывается автоматически</p>
+                <img src="https://static-cdn.jtvnw.net/jtv_user_pictures/dy2phoria-profile_image-70x70.png" 
+                     alt="Аватар" 
+                     class="logo-avatar"
+                     onerror="this.src='https://static-cdn.jtvnw.net/user-default-pictures-uv/ebe4cd89-b4f4-4cd9-adf2-24d6a6c3f4d2-profile_image-70x70.png'">
+                Dy2phoria 
+                <span class="logo-badge">стример</span>
+                <span id="streamStatus" class="stream-status-dot" title="Проверка статуса..."></span>
+            </h1>
         </div>
     </header>
 
@@ -29,24 +31,23 @@
     <main class="main">
         <div class="container">
 
-            <!-- БЛОК СОЦСЕТЕЙ -->
+            <!-- БЛОК СОЦСЕТЕЙ (компактные иконки) -->
             <div class="social-grid">
-    <a href="https://twitch.tv/dy2phoria" class="social-card twitch" target="_blank">
-        <span class="social-icon">📺</span>
-        <span class="social-name">Twitch</span>
-        <span class="social-desc">Основной канал</span>
-    </a>
-    <a href="https://t.me/dy2phoria" class="social-card telegram" target="_blank">
-        <span class="social-icon">✈️</span>
-        <span class="social-name">Telegram</span>
-        <span class="social-desc">Анонсы, новости</span>
-    </a>
-    <a href="https://donatty.com/dy2phoria" class="social-card donate" target="_blank">
-        <span class="social-icon">💜</span>
-        <span class="social-name">Донат</span>
-        <span class="social-desc">Поддержать</span>
-    </a>
-</div>
+                <a href="https://twitch.tv/dy2phoria" class="social-icon-btn twitch" target="_blank" title="Twitch">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
+                        <path d="M11.571 4.714h1.715v5.143H11.57zm4.715 0H18v5.143h-1.714zM6 0L1.714 4.286v15.428h5.143V24l4.286-4.286h3.428L22.286 12V0H6zm14.571 11.143l-3.428 3.428h-3.429l-3 3v-3H6.857V1.714h13.714v9.429z"/>
+                    </svg>
+                </a>
+                <a href="https://t.me/dy2phoria" class="social-icon-btn telegram" target="_blank" title="Telegram">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
+                        <path d="M12 0C5.373 0 0 5.373 0 12s5.373 12 12 12 12-5.373 12-12S18.627 0 12 0zm5.562 8.161c-.18 1.897-.962 6.502-1.359 8.627-.168.896-.5 1.196-.82 1.225-.696.064-1.225-.46-1.898-.903-1.054-.691-1.649-1.121-2.671-1.795-1.182-.779-.416-1.207.258-1.907.176-.183 3.248-2.977 3.307-3.23.007-.032.014-.15-.056-.212s-.174-.041-.249-.024c-.106.024-1.793 1.139-5.062 3.345-.479.329-.913.489-1.302.481-.428-.009-1.252-.242-1.865-.441-.751-.244-1.349-.374-1.297-.789.027-.216.325-.437.893-.663 3.498-1.524 5.831-2.529 6.998-3.015 3.333-1.386 4.025-1.627 4.477-1.635.099-.002.321.023.465.138.121.096.154.226.17.317.016.091.036.298.02.464z"/>
+                    </svg>
+                </a>
+                <a href="https://donatty.com/dy2phoria" class="social-card donate" target="_blank">
+                    <span class="social-icon">💜</span>
+                    <span class="social-name">Поддержать</span>
+                </a>
+            </div>
 
             <!-- БЛОК ПОИСКА ФИЛЬМОВ -->
             <div class="search-section">
@@ -55,6 +56,7 @@
                     КАЛЬКУЛЯТОР ЗАКАЗОВ
                 </h2>
                 <p class="section-subtitle"># ЗАКАЗ ФИЛЬМОВ</p>
+                <p class="header-subtitle-inline">Закажи фильм на стрим — цена рассчитывается автоматически</p>
                 
                 <div class="search-box">
                     <input type="text" id="movieSearch" class="search-input" placeholder="Поиск фильмов..." autocomplete="off">
@@ -131,13 +133,16 @@
 
             <!-- БЛОК ПРОСМОТРЕННЫХ ФИЛЬМОВ -->
             <div class="watched-section-compact">
-                <div class="watched-header" style="margin-bottom: 20px;">
-    <h2 class="section-title" style="margin-bottom: 5px;">
-        <span>✅</span> 
-        УЖЕ ПОСМОТРЕЛИ
-    </h2>
-    <p class="section-subtitle" style="color: #9147ff; margin: 0;">Архив стримов</p>
-</div>
+                <div class="watched-header">
+                    <div class="watched-header-left">
+                        <h2 class="section-title">
+                            <span>✅</span> 
+                            УЖЕ ПОСМОТРЕЛИ
+                        </h2>
+                        <p class="section-subtitle">Архив стримов</p>
+                    </div>
+                    <button id="toggleWatchedBtn" class="toggle-watched-btn" title="Скрыть/Показать архив">▼</button>
+                </div>
                 
                 <div class="watched-scroll">
                     <!-- Фильмы загружаются автоматически из админки -->
@@ -159,8 +164,54 @@
     <!-- Подключаем JavaScript -->
     <script src="script.js"></script>
 
-    <!-- Скрипт для загрузки просмотренных фильмов из админки -->
+    <!-- Скрипт для загрузки просмотренных фильмов и управления архивом -->
     <script>
+    // Переключение видимости архива
+    function initArchiveToggle() {
+        const toggleBtn = document.getElementById('toggleWatchedBtn');
+        const scroll = document.querySelector('.watched-scroll');
+        const note = document.querySelector('.watched-note-compact');
+        
+        if (!toggleBtn) return;
+        
+        toggleBtn.addEventListener('click', function() {
+            const isHidden = scroll.style.display === 'none';
+            
+            scroll.style.display = isHidden ? 'flex' : 'none';
+            if (note) note.style.display = isHidden ? 'block' : 'none';
+            this.textContent = isHidden ? '▼' : '▶';
+            this.style.transform = isHidden ? 'rotate(0deg)' : 'rotate(-90deg)';
+        });
+    }
+
+    // Проверка статуса стримера на Twitch
+    async function checkStreamStatus() {
+        const statusEl = document.getElementById('streamStatus');
+        if (!statusEl) return;
+        
+        const channel = 'dy2phoria';
+        
+        try {
+            const response = await fetch(`https://api.twitch.tv/helix/streams?user_login=${channel}`, {
+                headers: {
+                    'Client-ID': 'kimne78kx3ncjfz1h8f2o9x8k5q6j3'
+                }
+            });
+            const data = await response.json();
+            
+            if (data.data && data.data.length > 0) {
+                statusEl.classList.add('online');
+                statusEl.title = 'Онлайн';
+            } else {
+                statusEl.classList.add('offline');
+                statusEl.title = 'Офлайн';
+            }
+        } catch {
+            statusEl.classList.add('unknown');
+            statusEl.title = 'Статус неизвестен';
+        }
+    }
+
     async function loadWatchedMovies() {
         const container = document.querySelector('.watched-scroll');
         if (!container) return;
@@ -251,7 +302,11 @@
         }
     }
 
-    document.addEventListener('DOMContentLoaded', loadWatchedMovies);
+    document.addEventListener('DOMContentLoaded', () => {
+        loadWatchedMovies();
+        initArchiveToggle();
+        checkStreamStatus();
+    });
     </script>
 </body>
 </html>
