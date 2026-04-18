@@ -1,12 +1,30 @@
 // ===== НАСТРОЙКИ =====
-// Рабочий API-ключ от kinopoiskapiunofficial.tech (из кода друга)
+// Рабочий API-ключ от kinopoiskapiunofficial.tech
 const API_KEY = '3c6501fb-0e64-4d38-9df9-18509d27395e';
 // Базовый URL API
 const BASE_URL = 'https://kinopoiskapiunofficial.tech/api/v2.2';
 
 const STREAMER_NICKNAME = 'Dy2phoria';
-const BASE_PRICE = 500;
-const LONG_MOVIE_SURCHARGE = 20;
+
+// Цены по умолчанию (будут перезаписаны из админки)
+let BASE_PRICE = 500;
+let LONG_MOVIE_SURCHARGE = 20;
+
+// ===== ЗАГРУЗКА НАСТРОЕК ИЗ JSON =====
+async function loadPricingSettings() {
+    try {
+        const response = await fetch('/_data/settings/pricing.json');
+        if (!response.ok) throw new Error('Не удалось загрузить настройки');
+        const data = await response.json();
+        
+        BASE_PRICE = data.basePrice || 500;
+        LONG_MOVIE_SURCHARGE = data.longMovieSurcharge || 20;
+        
+        console.log('✅ Настройки цен загружены:', { BASE_PRICE, LONG_MOVIE_SURCHARGE });
+    } catch (error) {
+        console.warn('⚠️ Используются стандартные цены:', error);
+    }
+}
 
 // ===== ЭЛЕМЕНТЫ СТРАНИЦЫ =====
 const searchInput = document.getElementById('movieSearch');
@@ -230,4 +248,8 @@ searchInput.addEventListener('keypress', (e) => {
 priorityCheckbox.addEventListener('change', calculatePrice);
 copyBtn.addEventListener('click', copyDonateText);
 
-console.log('🎬 Калькулятор загружен! API: kinopoiskapiunofficial.tech');
+// Загружаем настройки цен при старте и выводим сообщение
+window.addEventListener('DOMContentLoaded', async () => {
+    await loadPricingSettings();
+    console.log('🎬 Калькулятор загружен! API: kinopoiskapiunofficial.tech');
+});
