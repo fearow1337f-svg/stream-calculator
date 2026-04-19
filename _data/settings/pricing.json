@@ -1,4 +1,5 @@
 {
   "basePrice": 800,
-  "longMovieSurcharge": 50
+  "longMovieSurcharge": 50,
+  "seriesBasePrice": 200
 }
