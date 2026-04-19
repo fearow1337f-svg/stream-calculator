@@ -1,10 +1,6 @@
 // ===== НАСТРОЙКИ =====
-// TMDB API Read Access Token
-const TMDB_API_KEY = 'eyJhbGciOiJIUzI1NiJ9.eyJhdWQiOiI0ZmU4NGNlMTA4NDJiZDgzM2I0ZGQzMDZmMzdmYmU1ZSIsIm5iZiI6MTc3NjYyODI1Mi42MDYwMDAyLCJzdWIiOiI2OWU1MzIxYzNjMmM4YTliZjIwNjNlZTkiLCJzY29wZXMiOlsiYXBpX3JlYWQiXSwidmVyc2lvbiI6MX0.JiNDeL08E6u8qEo_NM2hsJqkdA5_OB43ABGn0xUgjnk';
-
-// Твой собственный прокси на Cloudflare Workers
-const TMDB_BASE_URL = 'https://tmdb-proxy.fearow1337f.workers.dev/3';
-
+// Твой собственный прокси на Netlify Functions
+const TMDB_BASE_URL = '/api/tmdb';
 const TMDB_IMAGE_BASE = 'https://image.tmdb.org/t/p/w500';
 
 const STREAMER_NICKNAME = 'Dy2phoria';
@@ -109,14 +105,9 @@ async function searchMovie(query) {
     hideMovieCard();
     
     try {
-        // Запрос через ТВОЙ прокси
+        // Запрос через НАШ прокси на Netlify Functions
         const searchUrl = `${TMDB_BASE_URL}/search/movie?query=${encodeURIComponent(query)}&language=ru-RU&page=1`;
-        const searchResponse = await fetch(searchUrl, {
-            headers: {
-                'Authorization': `Bearer ${TMDB_API_KEY}`,
-                'accept': 'application/json'
-            }
-        });
+        const searchResponse = await fetch(searchUrl);
         
         if (!searchResponse.ok) throw new Error(`Ошибка ${searchResponse.status}`);
         
@@ -126,12 +117,7 @@ async function searchMovie(query) {
             const movie = searchData.results[0];
             
             const detailsUrl = `${TMDB_BASE_URL}/movie/${movie.id}?language=ru-RU`;
-            const detailsResponse = await fetch(detailsUrl, {
-                headers: {
-                    'Authorization': `Bearer ${TMDB_API_KEY}`,
-                    'accept': 'application/json'
-                }
-            });
+            const detailsResponse = await fetch(detailsUrl);
             
             if (detailsResponse.ok) {
                 const details = await detailsResponse.json();
@@ -226,5 +212,5 @@ copyBtn.addEventListener('click', copyDonateText);
 
 window.addEventListener('DOMContentLoaded', async () => {
     await loadPricingSettings();
-    console.log('🎬 Калькулятор загружен! API: TMDB (свой прокси)');
+    console.log('🎬 Калькулятор загружен! API: TMDB (через Netlify Functions)');
 });
