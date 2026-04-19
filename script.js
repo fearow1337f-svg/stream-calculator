@@ -1,6 +1,6 @@
 // ===== НАСТРОЙКИ =====
 // Прокси на Cloudflare Pages Functions
-const TMDB_BASE_URL = '/api/tmdb';
+const TMDB_BASE_URL = 'https://tmdb-proxy.fearow1337f.workers.dev/';
 const TMDB_IMAGE_BASE = 'https://image.tmdb.org/t/p/w500';
 
 const STREAMER_NICKNAME = 'Dy2phoria';
