@@ -1,6 +1,5 @@
 // ===== НАСТРОЙКИ =====
-// Прокси на Cloudflare Pages Functions
-const TMDB_BASE_URL = 'https://tmdb-proxy.fearow1337f.workers.dev/';
+const TMDB_BASE_URL = '/api/tmdb';
 const TMDB_IMAGE_BASE = 'https://image.tmdb.org/t/p/w500';
 
 const STREAMER_NICKNAME = 'Dy2phoria';
@@ -105,7 +104,6 @@ async function searchMovie(query) {
     hideMovieCard();
     
     try {
-        // Запрос через наш прокси на Cloudflare Pages Functions
         const searchUrl = `${TMDB_BASE_URL}/search/movie?query=${encodeURIComponent(query)}&language=ru-RU&page=1`;
         const searchResponse = await fetch(searchUrl);
         
@@ -212,5 +210,5 @@ copyBtn.addEventListener('click', copyDonateText);
 
 window.addEventListener('DOMContentLoaded', async () => {
     await loadPricingSettings();
-    console.log('🎬 Калькулятор загружен! API: TMDB (через Cloudflare Functions)');
+    console.log('🎬 Калькулятор загружен! API: TMDB (через Cloudflare Pages Functions)');
 });
