@@ -56,13 +56,20 @@
                     КАЛЬКУЛЯТОР ЗАКАЗОВ
                 </h2>
                 <p class="section-subtitle"># ЗАКАЗ ФИЛЬМОВ</p>
+                
+                <!-- Переключатель Фильмы / Сериалы -->
+                <div class="search-type-toggle">
+                    <button id="filmTypeBtn" class="type-btn active" data-type="FILM">🎬 Фильмы</button>
+                    <button id="seriesTypeBtn" class="type-btn" data-type="TV_SERIES">📺 Сериалы</button>
+                </div>
+                
                 <p class="header-subtitle-inline">Закажи фильм на стрим — цена рассчитывается автоматически</p>
                 
                 <div class="search-box">
-                    <input type="text" id="movieSearch" class="search-input" placeholder="Поиск фильмов..." autocomplete="off">
+                    <input type="text" id="movieSearch" class="search-input" placeholder="Поиск..." autocomplete="off">
                     <button id="searchBtn" class="search-btn">НАЙТИ</button>
                 </div>
-                <p class="search-hint">Поиск по базе TMDB</p>
+                <p class="search-hint">Поиск по базе Кинопоиск</p>
             </div>
 
             <!-- КАРТОЧКА ФИЛЬМА -->
@@ -103,6 +110,12 @@
                 <div class="calc-row">
                     <span class="calc-label">Длительность (<span id="calcDurationMins">0</span> мин.)</span>
                     <span class="calc-value" id="durationAdjustment">+0 ₽</span>
+                </div>
+                
+                <!-- Блок количества серий (только для сериалов) -->
+                <div id="episodesRow" class="calc-row hidden">
+                    <span class="calc-label">Количество серий</span>
+                    <input type="number" id="episodesCount" class="episodes-input" min="1" value="1" step="1">
                 </div>
                 
                 <div class="calc-row priority-row">
