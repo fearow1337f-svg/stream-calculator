@@ -4,9 +4,6 @@ const TMDB_API_KEY = 'eyJhbGciOiJIUzI1NiJ9.eyJhdWQiOiI0ZmU4NGNlMTA4NDJiZDgzM2I0Z
 const TMDB_BASE_URL = 'https://api.themoviedb.org/3';
 const TMDB_IMAGE_BASE = 'https://image.tmdb.org/t/p/w500';
 
-// Альтернативный CORS-прокси
-const CORS_PROXY = 'https://api.allorigins.win/raw?url=';
-
 const STREAMER_NICKNAME = 'Dy2phoria';
 
 let BASE_PRICE = 500;
@@ -109,13 +106,14 @@ async function searchMovie(query) {
     hideMovieCard();
     
     try {
-        // Поиск фильма через новый CORS-прокси
-        const searchApiUrl = `${TMDB_BASE_URL}/search/movie?query=${encodeURIComponent(query)}&language=ru-RU&page=1`;
-        const searchResponse = await fetch(CORS_PROXY + encodeURIComponent(searchApiUrl), {
+        // Прямой запрос к TMDB (без прокси)
+        const searchUrl = `${TMDB_BASE_URL}/search/movie?query=${encodeURIComponent(query)}&language=ru-RU&page=1`;
+        const searchResponse = await fetch(searchUrl, {
             headers: {
                 'Authorization': `Bearer ${TMDB_API_KEY}`,
                 'accept': 'application/json'
-            }
+            },
+            mode: 'cors'
         });
         
         if (!searchResponse.ok) throw new Error(`Ошибка ${searchResponse.status}`);
@@ -126,12 +124,13 @@ async function searchMovie(query) {
             const movie = searchData.results[0];
             
             // Получаем детальную информацию
-            const detailsApiUrl = `${TMDB_BASE_URL}/movie/${movie.id}?language=ru-RU`;
-            const detailsResponse = await fetch(CORS_PROXY + encodeURIComponent(detailsApiUrl), {
+            const detailsUrl = `${TMDB_BASE_URL}/movie/${movie.id}?language=ru-RU`;
+            const detailsResponse = await fetch(detailsUrl, {
                 headers: {
                     'Authorization': `Bearer ${TMDB_API_KEY}`,
                     'accept': 'application/json'
-                }
+                },
+                mode: 'cors'
             });
             
             if (detailsResponse.ok) {
@@ -235,5 +234,5 @@ copyBtn.addEventListener('click', copyDonateText);
 
 window.addEventListener('DOMContentLoaded', async () => {
     await loadPricingSettings();
-    console.log('🎬 Калькулятор загружен! API: TMDB (через AllOrigins)');
+    console.log('🎬 Калькулятор загружен! API: TMDB (прямое подключение)');
 });
