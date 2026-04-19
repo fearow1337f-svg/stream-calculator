@@ -697,3 +697,67 @@ a {
         flex-wrap: wrap;
     }
 }
+/* ===== СПИСОК НАЙДЕННЫХ ФИЛЬМОВ ===== */
+.movie-list {
+    max-width: 800px;
+    margin: 20px auto;
+    background: rgba(15, 15, 22, 0.9);
+    backdrop-filter: blur(8px);
+    border: 1px solid rgba(145, 71, 255, 0.15);
+    border-radius: 24px;
+    padding: 25px 30px;
+}
+
+.movie-list-title {
+    font-size: 1.2rem;
+    font-weight: 600;
+    color: #ffffff;
+    margin-bottom: 20px;
+}
+
+.movie-list-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    gap: 15px;
+}
+
+.movie-list-card {
+    background: rgba(10, 10, 16, 0.6);
+    border: 1px solid rgba(255, 255, 255, 0.03);
+    border-radius: 12px;
+    padding: 12px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    display: flex;
+    flex-direction: column;
+}
+
+.movie-list-card:hover {
+    background: rgba(20, 15, 30, 0.8);
+    border-color: rgba(145, 71, 255, 0.25);
+    transform: translateY(-2px);
+}
+
+.movie-list-poster {
+    width: 100%;
+    aspect-ratio: 2 / 3;
+    object-fit: cover;
+    border-radius: 8px;
+    margin-bottom: 10px;
+}
+
+.movie-list-info {
+    flex: 1;
+}
+
+.movie-list-name {
+    font-size: 0.95rem;
+    font-weight: 600;
+    color: #ffffff;
+    margin-bottom: 4px;
+}
+
+.movie-list-year {
+    font-size: 0.8rem;
+    color: #8888aa;
+}
