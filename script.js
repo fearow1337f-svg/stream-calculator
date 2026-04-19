@@ -10,6 +10,7 @@ const STREAMER_NICKNAME = 'Dy2phoria';
 
 let BASE_PRICE = 500;
 let LONG_MOVIE_SURCHARGE = 20;
+let currentType = 'FILM'; // 'FILM' или 'TV_SERIES'
 
 // ===== ЗАГРУЗКА НАСТРОЕК ИЗ JSON =====
 async function loadPricingSettings() {
@@ -58,6 +59,10 @@ const priorityCheckbox = document.getElementById('priorityCheckbox');
 const donateText = document.getElementById('donateText');
 const copyBtn = document.getElementById('copyBtn');
 
+// Элементы для сериалов
+const episodesRow = document.getElementById('episodesRow');
+const episodesCount = document.getElementById('episodesCount');
+
 let currentMovie = null;
 
 function formatDuration(minutes) {
@@ -79,9 +84,16 @@ function calculatePrice() {
     const duration = currentMovie.filmLength || 0;
     let durationExtra = 0;
     
-    if (duration > 120) {
+    const isSeries = currentMovie.type === 'TV_SERIES' || currentMovie.type === 'TV_SHOW' || currentMovie.type === 'MINI_SERIES';
+    
+    if (!isSeries && duration > 120) {
         durationExtra = LONG_MOVIE_SURCHARGE;
         price += durationExtra;
+    }
+    
+    if (isSeries && episodesCount) {
+        const count = parseInt(episodesCount.value) || 1;
+        price = price * count;
     }
     
     if (priorityCheckbox.checked) {
@@ -89,7 +101,7 @@ function calculatePrice() {
     }
     
     ratingAdjustment.textContent = `+0 ₽`;
-    durationAdjustment.textContent = `+${durationExtra} ₽`;
+    durationAdjustment.textContent = isSeries ? '—' : `+${durationExtra} ₽`;
     totalPrice.textContent = `${formatMoney(price)} ₽`;
     
     const movieName = currentMovie.nameRu || currentMovie.nameOriginal || 'Фильм';
@@ -113,6 +125,7 @@ async function searchMovie(query) {
         const url = new URL(BASE_URL + '/films');
         url.searchParams.append('keyword', query);
         url.searchParams.append('page', '1');
+        url.searchParams.append('type', currentType);
         
         const response = await fetch(url.toString(), {
             method: 'GET',
@@ -137,7 +150,7 @@ async function searchMovie(query) {
             }
             hideError();
         } else {
-            showError('Фильмы не найдены. Попробуй другое название.');
+            showError('Ничего не найдено. Попробуй другое название.');
         }
     } catch (error) {
         console.error('Ошибка:', error);
@@ -159,7 +172,7 @@ function renderMovieList(movies) {
     
     const title = document.createElement('h3');
     title.className = 'movie-list-title';
-    title.textContent = `Найдено ${movies.length} фильмов:`;
+    title.textContent = `Найдено ${movies.length}:`;
     listContainer.appendChild(title);
     
     const grid = document.createElement('div');
@@ -171,11 +184,12 @@ function renderMovieList(movies) {
         
         const year = movie.year || '????';
         const poster = movie.posterUrlPreview || movie.posterUrl || '';
+        const type = movie.type === 'TV_SERIES' ? '📺' : '🎬';
         
         card.innerHTML = `
             ${poster ? `<img src="${poster}" alt="${movie.nameRu}" class="movie-list-poster">` : ''}
             <div class="movie-list-info">
-                <div class="movie-list-name">${movie.nameRu || movie.nameOriginal || 'Без названия'}</div>
+                <div class="movie-list-name">${type} ${movie.nameRu || movie.nameOriginal || 'Без названия'}</div>
                 <div class="movie-list-year">${year}</div>
             </div>
         `;
@@ -232,6 +246,27 @@ async function enrichMovieData(film) {
 function displayMovie(film) {
     currentMovie = film;
     
+    const isSeries = film.type === 'TV_SERIES' || film.type === 'TV_SHOW' || film.type === 'MINI_SERIES';
+    
+    // Показываем или скрываем поле количества серий
+    if (episodesRow) {
+        episodesRow.classList.toggle('hidden', !isSeries);
+        if (isSeries && episodesCount) episodesCount.value = 1;
+    }
+    
+    // Меняем заголовок калькулятора
+    const calculatorTitle = document.querySelector('.calculator-title');
+    if (calculatorTitle) {
+        calculatorTitle.textContent = isSeries ? '🧮 КАЛЬКУЛЯЦИЯ: Сериал' : '🧮 КАЛЬКУЛЯЦИЯ: Фильм';
+    }
+    
+    // Меняем текст базовой стоимости
+    const baseLabel = document.querySelector('.calc-row:first-child .calc-label');
+    if (baseLabel) {
+        baseLabel.textContent = isSeries ? 'Базовая стоимость серии' : 'Базовая стоимость';
+    }
+    
+    // Постер
     if (film.kinopoiskId) {
         fetch(`https://kinopoiskapiunofficial.tech/api/v2.2/films/${film.kinopoiskId}/external_sources`, {
             headers: { 'X-API-KEY': API_KEY }
@@ -270,8 +305,8 @@ function displayMovie(film) {
     movieYear.textContent = film.year || '????';
     
     const duration = film.filmLength || 0;
-    movieDuration.textContent = formatDuration(duration);
-    calcDurationMins.textContent = duration;
+    movieDuration.textContent = isSeries ? '—' : formatDuration(duration);
+    calcDurationMins.textContent = isSeries ? 0 : duration;
     
     movieCountry.textContent = film.countries?.[0]?.country || '—';
     
@@ -317,12 +352,40 @@ function copyDonateText() {
     }
 }
 
+// Обработчики событий
 searchBtn.addEventListener('click', () => searchMovie(searchInput.value.trim()));
 searchInput.addEventListener('keypress', (e) => {
     if (e.key === 'Enter') searchMovie(searchInput.value.trim());
 });
 priorityCheckbox.addEventListener('change', calculatePrice);
 copyBtn.addEventListener('click', copyDonateText);
+
+if (episodesCount) {
+    episodesCount.addEventListener('input', calculatePrice);
+    episodesCount.addEventListener('change', calculatePrice);
+}
+
+// Переключатель типа контента
+const filmTypeBtn = document.getElementById('filmTypeBtn');
+const seriesTypeBtn = document.getElementById('seriesTypeBtn');
+
+if (filmTypeBtn && seriesTypeBtn) {
+    filmTypeBtn.addEventListener('click', () => {
+        filmTypeBtn.classList.add('active');
+        seriesTypeBtn.classList.remove('active');
+        currentType = 'FILM';
+        document.querySelector('.section-subtitle').textContent = '# ЗАКАЗ ФИЛЬМОВ';
+        searchInput.placeholder = 'Поиск фильмов...';
+    });
+    
+    seriesTypeBtn.addEventListener('click', () => {
+        seriesTypeBtn.classList.add('active');
+        filmTypeBtn.classList.remove('active');
+        currentType = 'TV_SERIES';
+        document.querySelector('.section-subtitle').textContent = '# ЗАКАЗ СЕРИАЛОВ';
+        searchInput.placeholder = 'Поиск сериалов...';
+    });
+}
 
 window.addEventListener('DOMContentLoaded', async () => {
     await loadPricingSettings();
