@@ -1,13 +1,16 @@
 // ===== НАСТРОЙКИ =====
+// TMDB API Read Access Token
 const TMDB_API_KEY = 'eyJhbGciOiJIUzI1NiJ9.eyJhdWQiOiI0ZmU4NGNlMTA4NDJiZDgzM2I0ZGQzMDZmMzdmYmU1ZSIsIm5iZiI6MTc3NjYyODI1Mi42MDYwMDAyLCJzdWIiOiI2OWU1MzIxYzNjMmM4YTliZjIwNjNlZTkiLCJzY29wZXMiOlsiYXBpX3JlYWQiXSwidmVyc2lvbiI6MX0.JiNDeL08E6u8qEo_NM2hsJqkdA5_OB43ABGn0xUgjnk';
+
+// Твой собственный прокси на Cloudflare Workers
+const TMDB_BASE_URL = 'https://tmdb-proxy.fearow1337f.workers.dev/3';
+
 const TMDB_IMAGE_BASE = 'https://image.tmdb.org/t/p/w500';
+
 const STREAMER_NICKNAME = 'Dy2phoria';
 
 let BASE_PRICE = 500;
 let LONG_MOVIE_SURCHARGE = 20;
-
-// ===== НОВЫЙ ПРОКСИ =====
-const CORS_PROXY = 'https://thingproxy.freeboard.io/fetch/';
 
 // ===== ЗАГРУЗКА НАСТРОЕК ИЗ JSON =====
 async function loadPricingSettings() {
@@ -106,9 +109,9 @@ async function searchMovie(query) {
     hideMovieCard();
     
     try {
-        // Запрос через новый прокси
-        const searchApiUrl = `https://api.themoviedb.org/3/search/movie?query=${encodeURIComponent(query)}&language=ru-RU&page=1`;
-        const searchResponse = await fetch(CORS_PROXY + searchApiUrl, {
+        // Запрос через ТВОЙ прокси
+        const searchUrl = `${TMDB_BASE_URL}/search/movie?query=${encodeURIComponent(query)}&language=ru-RU&page=1`;
+        const searchResponse = await fetch(searchUrl, {
             headers: {
                 'Authorization': `Bearer ${TMDB_API_KEY}`,
                 'accept': 'application/json'
@@ -122,8 +125,8 @@ async function searchMovie(query) {
         if (searchData.results && searchData.results.length > 0) {
             const movie = searchData.results[0];
             
-            const detailsApiUrl = `https://api.themoviedb.org/3/movie/${movie.id}?language=ru-RU`;
-            const detailsResponse = await fetch(CORS_PROXY + detailsApiUrl, {
+            const detailsUrl = `${TMDB_BASE_URL}/movie/${movie.id}?language=ru-RU`;
+            const detailsResponse = await fetch(detailsUrl, {
                 headers: {
                     'Authorization': `Bearer ${TMDB_API_KEY}`,
                     'accept': 'application/json'
@@ -223,5 +226,5 @@ copyBtn.addEventListener('click', copyDonateText);
 
 window.addEventListener('DOMContentLoaded', async () => {
     await loadPricingSettings();
-    console.log('🎬 Калькулятор загружен! API: TMDB (thingproxy)');
+    console.log('🎬 Калькулятор загружен! API: TMDB (свой прокси)');
 });
