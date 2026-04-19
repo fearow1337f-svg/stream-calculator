@@ -2,6 +2,6 @@
   functions = "netlify/functions"
 
 [[redirects]]
-  from = "/api/*"
-  to = "/.netlify/functions/:splat"
+  from = "/api/tmdb/*"
+  to = "/.netlify/functions/tmdb-proxy/:splat"
   status = 200
