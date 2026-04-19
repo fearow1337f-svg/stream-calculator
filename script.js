@@ -4,6 +4,9 @@ const TMDB_API_KEY = 'eyJhbGciOiJIUzI1NiJ9.eyJhdWQiOiI0ZmU4NGNlMTA4NDJiZDgzM2I0Z
 const TMDB_BASE_URL = 'https://api.themoviedb.org/3';
 const TMDB_IMAGE_BASE = 'https://image.tmdb.org/t/p/w500';
 
+// CORS-прокси для обхода блокировок
+const CORS_PROXY = 'https://corsproxy.io/?';
+
 const STREAMER_NICKNAME = 'Dy2phoria';
 
 let BASE_PRICE = 500;
@@ -106,9 +109,9 @@ async function searchMovie(query) {
     hideMovieCard();
     
     try {
-        // Поиск фильма
-        const searchUrl = `${TMDB_BASE_URL}/search/movie?query=${encodeURIComponent(query)}&language=ru-RU&page=1`;
-        const searchResponse = await fetch(searchUrl, {
+        // Поиск фильма через CORS-прокси
+        const searchApiUrl = `${TMDB_BASE_URL}/search/movie?query=${encodeURIComponent(query)}&language=ru-RU&page=1`;
+        const searchResponse = await fetch(CORS_PROXY + encodeURIComponent(searchApiUrl), {
             headers: {
                 'Authorization': `Bearer ${TMDB_API_KEY}`,
                 'accept': 'application/json'
@@ -123,8 +126,8 @@ async function searchMovie(query) {
             const movie = searchData.results[0];
             
             // Получаем детальную информацию
-            const detailsUrl = `${TMDB_BASE_URL}/movie/${movie.id}?language=ru-RU`;
-            const detailsResponse = await fetch(detailsUrl, {
+            const detailsApiUrl = `${TMDB_BASE_URL}/movie/${movie.id}?language=ru-RU`;
+            const detailsResponse = await fetch(CORS_PROXY + encodeURIComponent(detailsApiUrl), {
                 headers: {
                     'Authorization': `Bearer ${TMDB_API_KEY}`,
                     'accept': 'application/json'
@@ -232,5 +235,5 @@ copyBtn.addEventListener('click', copyDonateText);
 
 window.addEventListener('DOMContentLoaded', async () => {
     await loadPricingSettings();
-    console.log('🎬 Калькулятор загружен! API: TMDB');
+    console.log('🎬 Калькулятор загружен! API: TMDB (через CORS-прокси)');
 });
