@@ -96,6 +96,7 @@ function calculatePrice() {
     donateText.value = `${movieName} ${priorityCheckbox.checked ? '(ВНЕ ОЧЕРЕДИ)' : ''}`;
 }
 
+// Поиск фильма — теперь показывает список, если результатов больше одного
 async function searchMovie(query) {
     if (!query || query.length < 2) {
         showError('Введи хотя бы 2 буквы');
@@ -106,6 +107,7 @@ async function searchMovie(query) {
     searchBtn.disabled = true;
     hideError();
     hideMovieCard();
+    hideMovieList();
     
     try {
         const url = new URL(BASE_URL + '/films');
@@ -125,12 +127,17 @@ async function searchMovie(query) {
         const data = await response.json();
         
         if (data.items && data.items.length > 0) {
-            const film = data.items[0];
-            await enrichMovieData(film);
-            displayMovie(film);
+            if (data.items.length === 1) {
+                const film = data.items[0];
+                await enrichMovieData(film);
+                displayMovie(film);
+                hideMovieList();
+            } else {
+                renderMovieList(data.items);
+            }
             hideError();
         } else {
-            showError('Фильм не найден. Попробуй другое название.');
+            showError('Фильмы не найдены. Попробуй другое название.');
         }
     } catch (error) {
         console.error('Ошибка:', error);
@@ -139,6 +146,64 @@ async function searchMovie(query) {
         searchBtn.textContent = 'НАЙТИ';
         searchBtn.disabled = false;
     }
+}
+
+// Отображение списка фильмов
+function renderMovieList(movies) {
+    const oldList = document.getElementById('movieList');
+    if (oldList) oldList.remove();
+    
+    const listContainer = document.createElement('div');
+    listContainer.id = 'movieList';
+    listContainer.className = 'movie-list';
+    
+    const title = document.createElement('h3');
+    title.className = 'movie-list-title';
+    title.textContent = `Найдено ${movies.length} фильмов:`;
+    listContainer.appendChild(title);
+    
+    const grid = document.createElement('div');
+    grid.className = 'movie-list-grid';
+    
+    movies.forEach(movie => {
+        const card = document.createElement('div');
+        card.className = 'movie-list-card';
+        
+        const year = movie.year || '????';
+        const poster = movie.posterUrlPreview || movie.posterUrl || '';
+        
+        card.innerHTML = `
+            ${poster ? `<img src="${poster}" alt="${movie.nameRu}" class="movie-list-poster">` : ''}
+            <div class="movie-list-info">
+                <div class="movie-list-name">${movie.nameRu || movie.nameOriginal || 'Без названия'}</div>
+                <div class="movie-list-year">${year}</div>
+            </div>
+        `;
+        
+        card.addEventListener('click', async () => {
+            searchBtn.textContent = '⏳';
+            searchBtn.disabled = true;
+            
+            await enrichMovieData(movie);
+            displayMovie(movie);
+            hideMovieList();
+            
+            searchBtn.textContent = 'НАЙТИ';
+            searchBtn.disabled = false;
+        });
+        
+        grid.appendChild(card);
+    });
+    
+    listContainer.appendChild(grid);
+    
+    const searchSection = document.querySelector('.search-section');
+    searchSection.parentNode.insertBefore(listContainer, searchSection.nextSibling);
+}
+
+function hideMovieList() {
+    const list = document.getElementById('movieList');
+    if (list) list.remove();
 }
 
 async function enrichMovieData(film) {
@@ -167,16 +232,13 @@ async function enrichMovieData(film) {
 function displayMovie(film) {
     currentMovie = film;
     
-    // Постер — пытаемся взять с TMDB, иначе с Кинопоиска
     if (film.kinopoiskId) {
-        // Запрашиваем TMDB ID через внешний сервис (бесплатный)
         fetch(`https://kinopoiskapiunofficial.tech/api/v2.2/films/${film.kinopoiskId}/external_sources`, {
             headers: { 'X-API-KEY': API_KEY }
         })
         .then(res => res.json())
         .then(data => {
             if (data.tmdbId) {
-                // Если есть TMDB ID, берём постер оттуда
                 fetch(`https://api.themoviedb.org/3/movie/${data.tmdbId}?api_key=4fe84ce10842bd833b4dd306f37fbe5e&language=ru`)
                     .then(res => res.json())
                     .then(tmdbData => {
@@ -188,7 +250,6 @@ function displayMovie(film) {
                         }
                     })
                     .catch(() => {
-                        // Fallback на постер Кинопоиска
                         moviePoster.src = film.posterUrl || film.posterUrlPreview || '';
                         moviePoster.style.display = moviePoster.src ? 'block' : 'none';
                     });
@@ -197,7 +258,6 @@ function displayMovie(film) {
             }
         })
         .catch(() => {
-            // Fallback на постер Кинопоиска
             moviePoster.src = film.posterUrl || film.posterUrlPreview || '';
             moviePoster.style.display = moviePoster.src ? 'block' : 'none';
         });
