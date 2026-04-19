@@ -1,5 +1,5 @@
 // ===== НАСТРОЙКИ =====
-const TMDB_BASE_URL = '/api/tmdb';
+const TMDB_BASE_URL = 'https://c7580590.stream-calculator.pages.dev/api/tmdb';
 const TMDB_IMAGE_BASE = 'https://image.tmdb.org/t/p/w500';
 
 const STREAMER_NICKNAME = 'Dy2phoria';
