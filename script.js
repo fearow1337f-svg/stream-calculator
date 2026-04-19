@@ -1,6 +1,8 @@
 // ===== НАСТРОЙКИ =====
-const API_KEY = '3c6501fb-0e64-4d38-9df9-18509d27395e';
-const BASE_URL = 'https://kinopoiskapiunofficial.tech/api/v2.2';
+// TMDB API Read Access Token
+const TMDB_API_KEY = 'eyJhbGciOiJIUzI1NiJ9.eyJhdWQiOiI0ZmU4NGNlMTA4NDJiZDgzM2I0ZGQzMDZmMzdmYmU1ZSIsIm5iZiI6MTc3NjYyODI1Mi42MDYwMDAyLCJzdWIiOiI2OWU1MzIxYzNjMmM4YTliZjIwNjNlZTkiLCJzY29wZXMiOlsiYXBpX3JlYWQiXSwidmVyc2lvbiI6MX0.JiNDeL08E6u8qEo_NM2hsJqkdA5_OB43ABGn0xUgjnk';
+const TMDB_BASE_URL = 'https://api.themoviedb.org/3';
+const TMDB_IMAGE_BASE = 'https://image.tmdb.org/t/p/w500';
 
 const STREAMER_NICKNAME = 'Dy2phoria';
 
@@ -72,7 +74,7 @@ function calculatePrice() {
     if (!currentMovie) return;
     
     let price = BASE_PRICE;
-    const duration = currentMovie.filmLength || 0;
+    const duration = currentMovie.runtime || 0;
     let durationExtra = 0;
     
     if (duration > 120) {
@@ -88,7 +90,7 @@ function calculatePrice() {
     durationAdjustment.textContent = `+${durationExtra} ₽`;
     totalPrice.textContent = `${formatMoney(price)} ₽`;
     
-    const movieName = currentMovie.nameRu || currentMovie.nameOriginal || 'Фильм';
+    const movieName = currentMovie.title || currentMovie.original_title || 'Фильм';
     donateText.value = `${movieName} ${priorityCheckbox.checked ? '(ВНЕ ОЧЕРЕДИ)' : ''}`;
 }
 
@@ -104,26 +106,38 @@ async function searchMovie(query) {
     hideMovieCard();
     
     try {
-        const url = new URL(BASE_URL + '/films');
-        url.searchParams.append('keyword', query);
-        url.searchParams.append('page', '1');
-        
-        const response = await fetch(url.toString(), {
-            method: 'GET',
+        // Поиск фильма
+        const searchUrl = `${TMDB_BASE_URL}/search/movie?query=${encodeURIComponent(query)}&language=ru-RU&page=1`;
+        const searchResponse = await fetch(searchUrl, {
             headers: {
-                'X-API-KEY': API_KEY,
+                'Authorization': `Bearer ${TMDB_API_KEY}`,
                 'accept': 'application/json'
             }
         });
         
-        if (!response.ok) throw new Error(`Ошибка ${response.status}`);
+        if (!searchResponse.ok) throw new Error(`Ошибка ${searchResponse.status}`);
         
-        const data = await response.json();
+        const searchData = await searchResponse.json();
         
-        if (data.items && data.items.length > 0) {
-            const film = data.items[0];
-            await enrichMovieData(film);
-            displayMovie(film);
+        if (searchData.results && searchData.results.length > 0) {
+            const movie = searchData.results[0];
+            
+            // Получаем детальную информацию
+            const detailsUrl = `${TMDB_BASE_URL}/movie/${movie.id}?language=ru-RU`;
+            const detailsResponse = await fetch(detailsUrl, {
+                headers: {
+                    'Authorization': `Bearer ${TMDB_API_KEY}`,
+                    'accept': 'application/json'
+                }
+            });
+            
+            if (detailsResponse.ok) {
+                const details = await detailsResponse.json();
+                displayMovie(details);
+            } else {
+                displayMovie(movie);
+            }
+            
             hideError();
         } else {
             showError('Фильм не найден. Попробуй другое название.');
@@ -137,56 +151,44 @@ async function searchMovie(query) {
     }
 }
 
-async function enrichMovieData(film) {
-    try {
-        const url = new URL(BASE_URL + `/films/${film.kinopoiskId}`);
-        const response = await fetch(url.toString(), {
-            headers: {
-                'X-API-KEY': API_KEY,
-                'accept': 'application/json'
-            }
-        });
-        
-        if (response.ok) {
-            const details = await response.json();
-            film.filmLength = details.filmLength;
-            film.countries = details.countries;
-            film.description = details.description;
-            film.slogan = details.slogan;
-        }
-    } catch (error) {
-        console.warn('Не удалось загрузить детали фильма:', error);
-        film.filmLength = film.filmLength || 0;
-    }
-}
-
-function displayMovie(film) {
-    currentMovie = film;
+function displayMovie(movie) {
+    currentMovie = movie;
     
-    if (film.posterUrl || film.posterUrlPreview) {
-        moviePoster.src = film.posterUrl || film.posterUrlPreview;
+    // Постер
+    if (movie.poster_path) {
+        moviePoster.src = TMDB_IMAGE_BASE + movie.poster_path;
         moviePoster.style.display = 'block';
     } else {
         moviePoster.style.display = 'none';
     }
     
-    movieTitle.textContent = film.nameRu || film.nameOriginal || 'Без названия';
-    movieYear.textContent = film.year || '????';
+    // Название
+    movieTitle.textContent = movie.title || movie.original_title || 'Без названия';
     
-    const duration = film.filmLength || 0;
+    // Год
+    const year = movie.release_date ? movie.release_date.split('-')[0] : '????';
+    movieYear.textContent = year;
+    
+    // Длительность
+    const duration = movie.runtime || 0;
     movieDuration.textContent = formatDuration(duration);
     calcDurationMins.textContent = duration;
     
-    movieCountry.textContent = film.countries?.[0]?.country || '—';
+    // Страна
+    const country = movie.production_countries?.[0]?.name || '—';
+    movieCountry.textContent = country;
     
-    const rating = film.ratingKinopoisk?.toFixed(1) || '0.0';
+    // Рейтинг
+    const rating = movie.vote_average?.toFixed(1) || '0.0';
     movieImdb.textContent = rating;
     calcRating.textContent = rating;
     
-    movieImdbLink.href = `https://www.imdb.com/find?q=${encodeURIComponent(film.nameRu || film.nameOriginal || '')}`;
-    movieKpLink.href = `https://www.kinopoisk.ru/film/${film.kinopoiskId}/`;
+    // Ссылки
+    movieImdbLink.href = `https://www.imdb.com/title/${movie.imdb_id || ''}`;
+    movieKpLink.href = `https://www.kinopoisk.ru/index.php?kp_query=${encodeURIComponent(movie.title || movie.original_title || '')}`;
     
-    movieOverview.textContent = film.description || film.slogan || 'Описание отсутствует.';
+    // Описание
+    movieOverview.textContent = movie.overview || 'Описание отсутствует.';
     
     movieCard.classList.remove('hidden');
     calculatorBlock.classList.remove('hidden');
@@ -230,5 +232,5 @@ copyBtn.addEventListener('click', copyDonateText);
 
 window.addEventListener('DOMContentLoaded', async () => {
     await loadPricingSettings();
-    console.log('🎬 Калькулятор загружен! API: kinopoiskapiunofficial.tech');
+    console.log('🎬 Калькулятор загружен! API: TMDB');
 });
