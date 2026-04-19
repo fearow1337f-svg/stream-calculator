@@ -1,13 +1,13 @@
 // ===== НАСТРОЙКИ =====
-// TMDB API Read Access Token
 const TMDB_API_KEY = 'eyJhbGciOiJIUzI1NiJ9.eyJhdWQiOiI0ZmU4NGNlMTA4NDJiZDgzM2I0ZGQzMDZmMzdmYmU1ZSIsIm5iZiI6MTc3NjYyODI1Mi42MDYwMDAyLCJzdWIiOiI2OWU1MzIxYzNjMmM4YTliZjIwNjNlZTkiLCJzY29wZXMiOlsiYXBpX3JlYWQiXSwidmVyc2lvbiI6MX0.JiNDeL08E6u8qEo_NM2hsJqkdA5_OB43ABGn0xUgjnk';
-const TMDB_BASE_URL = 'https://api.themoviedb.org/3';
 const TMDB_IMAGE_BASE = 'https://image.tmdb.org/t/p/w500';
-
 const STREAMER_NICKNAME = 'Dy2phoria';
 
 let BASE_PRICE = 500;
 let LONG_MOVIE_SURCHARGE = 20;
+
+// ===== НОВЫЙ ПРОКСИ =====
+const CORS_PROXY = 'https://thingproxy.freeboard.io/fetch/';
 
 // ===== ЗАГРУЗКА НАСТРОЕК ИЗ JSON =====
 async function loadPricingSettings() {
@@ -106,14 +106,13 @@ async function searchMovie(query) {
     hideMovieCard();
     
     try {
-        // Прямой запрос к TMDB (без прокси)
-        const searchUrl = `${TMDB_BASE_URL}/search/movie?query=${encodeURIComponent(query)}&language=ru-RU&page=1`;
-        const searchResponse = await fetch(searchUrl, {
+        // Запрос через новый прокси
+        const searchApiUrl = `https://api.themoviedb.org/3/search/movie?query=${encodeURIComponent(query)}&language=ru-RU&page=1`;
+        const searchResponse = await fetch(CORS_PROXY + searchApiUrl, {
             headers: {
                 'Authorization': `Bearer ${TMDB_API_KEY}`,
                 'accept': 'application/json'
-            },
-            mode: 'cors'
+            }
         });
         
         if (!searchResponse.ok) throw new Error(`Ошибка ${searchResponse.status}`);
@@ -123,14 +122,12 @@ async function searchMovie(query) {
         if (searchData.results && searchData.results.length > 0) {
             const movie = searchData.results[0];
             
-            // Получаем детальную информацию
-            const detailsUrl = `${TMDB_BASE_URL}/movie/${movie.id}?language=ru-RU`;
-            const detailsResponse = await fetch(detailsUrl, {
+            const detailsApiUrl = `https://api.themoviedb.org/3/movie/${movie.id}?language=ru-RU`;
+            const detailsResponse = await fetch(CORS_PROXY + detailsApiUrl, {
                 headers: {
                     'Authorization': `Bearer ${TMDB_API_KEY}`,
                     'accept': 'application/json'
-                },
-                mode: 'cors'
+                }
             });
             
             if (detailsResponse.ok) {
@@ -156,7 +153,6 @@ async function searchMovie(query) {
 function displayMovie(movie) {
     currentMovie = movie;
     
-    // Постер
     if (movie.poster_path) {
         moviePoster.src = TMDB_IMAGE_BASE + movie.poster_path;
         moviePoster.style.display = 'block';
@@ -164,32 +160,25 @@ function displayMovie(movie) {
         moviePoster.style.display = 'none';
     }
     
-    // Название
     movieTitle.textContent = movie.title || movie.original_title || 'Без названия';
     
-    // Год
     const year = movie.release_date ? movie.release_date.split('-')[0] : '????';
     movieYear.textContent = year;
     
-    // Длительность
     const duration = movie.runtime || 0;
     movieDuration.textContent = formatDuration(duration);
     calcDurationMins.textContent = duration;
     
-    // Страна
     const country = movie.production_countries?.[0]?.name || '—';
     movieCountry.textContent = country;
     
-    // Рейтинг
     const rating = movie.vote_average?.toFixed(1) || '0.0';
     movieImdb.textContent = rating;
     calcRating.textContent = rating;
     
-    // Ссылки
     movieImdbLink.href = `https://www.imdb.com/title/${movie.imdb_id || ''}`;
     movieKpLink.href = `https://www.kinopoisk.ru/index.php?kp_query=${encodeURIComponent(movie.title || movie.original_title || '')}`;
     
-    // Описание
     movieOverview.textContent = movie.overview || 'Описание отсутствует.';
     
     movieCard.classList.remove('hidden');
@@ -234,5 +223,5 @@ copyBtn.addEventListener('click', copyDonateText);
 
 window.addEventListener('DOMContentLoaded', async () => {
     await loadPricingSettings();
-    console.log('🎬 Калькулятор загружен! API: TMDB (прямое подключение)');
+    console.log('🎬 Калькулятор загружен! API: TMDB (thingproxy)');
 });
