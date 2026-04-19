@@ -30,7 +30,7 @@ collections:
         name: "pricing"
         file: "_data/settings/pricing.json"
         fields:
-          - label: "Базовая стоимость (₽)"
+          - label: "Базовая стоимость фильма (₽)"
             name: "basePrice"
             widget: "number"
             default: 500
@@ -44,3 +44,10 @@ collections:
             value_type: "int"
             min: 0
             step: 5
+          - label: "Базовая стоимость серии (₽)"
+            name: "seriesBasePrice"
+            widget: "number"
+            default: 200
+            value_type: "int"
+            min: 0
+            step: 10
