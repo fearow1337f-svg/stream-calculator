@@ -10,6 +10,7 @@ const STREAMER_NICKNAME = 'Dy2phoria';
 
 let BASE_PRICE = 500;
 let LONG_MOVIE_SURCHARGE = 20;
+let SERIES_BASE_PRICE = 200;
 let currentType = 'FILM'; // 'FILM' или 'TV_SERIES'
 
 // ===== ЗАГРУЗКА НАСТРОЕК ИЗ JSON =====
@@ -21,13 +22,14 @@ async function loadPricingSettings() {
         
         BASE_PRICE = data.basePrice || 500;
         LONG_MOVIE_SURCHARGE = data.longMovieSurcharge || 20;
+        SERIES_BASE_PRICE = data.seriesBasePrice || 200;
         
         const basePriceDisplay = document.getElementById('basePriceDisplay');
         if (basePriceDisplay) {
             basePriceDisplay.textContent = `${BASE_PRICE} ₽`;
         }
         
-        console.log('✅ Настройки цен загружены:', { BASE_PRICE, LONG_MOVIE_SURCHARGE });
+        console.log('✅ Настройки цен загружены:', { BASE_PRICE, LONG_MOVIE_SURCHARGE, SERIES_BASE_PRICE });
     } catch (error) {
         console.warn('⚠️ Используются стандартные цены:', error);
     }
@@ -80,11 +82,12 @@ function formatMoney(amount) {
 function calculatePrice() {
     if (!currentMovie) return;
     
-    let price = BASE_PRICE;
+    const isSeries = currentMovie.type === 'TV_SERIES' || currentMovie.type === 'TV_SHOW' || currentMovie.type === 'MINI_SERIES';
+    
+    let price = isSeries ? SERIES_BASE_PRICE : BASE_PRICE;
     const duration = currentMovie.filmLength || 0;
     let durationExtra = 0;
-    
-    const isSeries = currentMovie.type === 'TV_SERIES' || currentMovie.type === 'TV_SHOW' || currentMovie.type === 'MINI_SERIES';
+    let episodes = 1;
     
     if (!isSeries && duration > 120) {
         durationExtra = LONG_MOVIE_SURCHARGE;
@@ -92,8 +95,8 @@ function calculatePrice() {
     }
     
     if (isSeries && episodesCount) {
-        const count = parseInt(episodesCount.value) || 1;
-        price = price * count;
+        episodes = parseInt(episodesCount.value) || 1;
+        price = price * episodes;
     }
     
     if (priorityCheckbox.checked) {
@@ -105,7 +108,10 @@ function calculatePrice() {
     totalPrice.textContent = `${formatMoney(price)} ₽`;
     
     const movieName = currentMovie.nameRu || currentMovie.nameOriginal || 'Фильм';
-    donateText.value = `${movieName} ${priorityCheckbox.checked ? '(ВНЕ ОЧЕРЕДИ)' : ''}`;
+    const priorityText = priorityCheckbox.checked ? ' (ВНЕ ОЧЕРЕДИ)' : '';
+    const episodesText = isSeries ? ` — ${episodes} серий` : '';
+    
+    donateText.value = `${movieName}${episodesText}${priorityText}`;
 }
 
 // Поиск фильма — теперь показывает список, если результатов больше одного
@@ -260,10 +266,15 @@ function displayMovie(film) {
         calculatorTitle.textContent = isSeries ? '🧮 КАЛЬКУЛЯЦИЯ: Сериал' : '🧮 КАЛЬКУЛЯЦИЯ: Фильм';
     }
     
-    // Меняем текст базовой стоимости
+    // Меняем текст базовой стоимости и её значение
     const baseLabel = document.querySelector('.calc-row:first-child .calc-label');
+    const baseValue = document.getElementById('basePriceDisplay');
+    
     if (baseLabel) {
         baseLabel.textContent = isSeries ? 'Базовая стоимость серии' : 'Базовая стоимость';
+    }
+    if (baseValue) {
+        baseValue.textContent = `${isSeries ? SERIES_BASE_PRICE : BASE_PRICE} ₽`;
     }
     
     // Постер
