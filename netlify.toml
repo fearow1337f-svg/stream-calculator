@@ -1,7 +1,0 @@
-[build]
-  functions = "netlify/functions"
-
-[[redirects]]
-  from = "/api/tmdb/*"
-  to = "/.netlify/functions/tmdb-proxy/:splat"
-  status = 200
