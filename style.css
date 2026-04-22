@@ -58,10 +58,10 @@ body {
         z-index: 2;
     }
 
-    /* Слой 4: Неоновая обводка по периметру ВСЕГО САЙТА */
-    .container::before {
+    /* Слой 4: Неоновая обводка по периметру (закреплена поверх всего, не двигается) */
+    html::after {
         content: "";
-        position: absolute;
+        position: fixed;
         top: 0;
         left: 0;
         right: 0;
@@ -70,20 +70,6 @@ body {
         background-size: 100% 100%;
         pointer-events: none;
         z-index: 1000;
-    }
-    
-    /* Делаем body и html растягивающимися на всю высоту */
-    html, body {
-        height: 100%;
-    }
-    
-    body {
-        position: relative;
-    }
-    
-    .container {
-        position: relative;
-        min-height: 100vh;
     }
 }
 
