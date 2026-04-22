@@ -41,13 +41,11 @@ a {
     color: inherit;
 }
 
-/* ===== ШАПКА ===== */
+/* ===== ШАПКА (БЕЗ БЛЮРА) ===== */
 .header {
     padding: 30px 0 20px;
     border-bottom: 1px solid rgba(255, 255, 255, 0.06);
     margin-bottom: 30px;
-    backdrop-filter: blur(8px);
-    background: rgba(10, 5, 20, 0.3);
 }
 
 .logo {
@@ -660,7 +658,7 @@ a {
     font-style: italic;
 }
 
-/* ===== ПОДВАЛ ===== */
+/* ===== ПОДВАЛ (БЕЗ БЛЮРА) ===== */
 .footer {
     padding: 30px 0;
     text-align: center;
@@ -668,8 +666,6 @@ a {
     font-size: 0.9rem;
     border-top: 1px solid rgba(255, 255, 255, 0.03);
     margin-top: 20px;
-    backdrop-filter: blur(8px);
-    background: rgba(10, 5, 20, 0.3);
 }
 
 /* ===== ВСПОМОГАТЕЛЬНЫЕ КЛАССЫ ===== */
