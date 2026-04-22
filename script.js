@@ -530,11 +530,11 @@ function setActiveType(type) {
     if (type === 'FILM') {
         subtitle.textContent = '# ЗАКАЗ ФИЛЬМОВ';
         searchInput.placeholder = 'Поиск фильмов...';
-        hint.textContent = 'Поиск по базе Кинопоиск';
+        hint.textContent = 'Поиск по базе TMDB';
     } else if (type === 'TV_SERIES') {
         subtitle.textContent = '# ЗАКАЗ СЕРИАЛОВ';
         searchInput.placeholder = 'Поиск сериалов...';
-        hint.textContent = 'Поиск по базе Кинопоиск';
+        hint.textContent = 'Поиск по базе TMDB';
     } else {
         subtitle.textContent = '# ЗАКАЗ ИГР';
         searchInput.placeholder = 'Поиск игр...';
