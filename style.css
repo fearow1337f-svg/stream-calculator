@@ -21,67 +21,64 @@ body {
     z-index: 0;
 }
 
-/* Слой 2: Паттерн по центру */
-body::before {
-    content: "";
-    position: fixed;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-    width: 100%;
-    max-width: 1200px;
-    height: 100%;
-    max-height: 800px;
-    background: url('assets/images/bg_pattern_transparent.PNG') no-repeat center center;
-    background-size: contain;
-    pointer-events: none;
-    z-index: 1;
-    opacity: 0.7;
-}
-
-/* Слой 3: Неоновое кольцо по центру */
-body::after {
-    content: "";
-    position: fixed;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-    width: 100%;
-    max-width: 800px;
-    height: 100%;
-    max-height: 600px;
-    background: url('assets/images/neon_ring_transparent%20.PNG') no-repeat center center;
-    background-size: contain;
-    pointer-events: none;
-    z-index: 2;
-}
-
-/* Слой 4: Неоновая обводка по периметру (поверх всего) */
-html::after {
-    content: "";
-    position: fixed;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    background: url('assets/images/neon_stroke_transparent%20.PNG') no-repeat center center;
-    background-size: 100% 100%;
-    pointer-events: none;
-    z-index: 1000;
-}
-
-/* Мобильная адаптация слоёв */
-@media (max-width: 768px) {
+/* ===== ПК-ВЕРСИЯ: ВСЕ СЛОИ ===== */
+@media (min-width: 769px) {
+    /* Слой 2: Паттерн по центру */
     body::before {
-        max-width: 100%;
-        max-height: 600px;
+        content: "";
+        position: fixed;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        width: 100%;
+        max-width: 1200px;
+        height: 100%;
+        max-height: 800px;
+        background: url('assets/images/bg_pattern_transparent.PNG') no-repeat center center;
         background-size: contain;
+        pointer-events: none;
+        z-index: 1;
+        opacity: 0.7;
     }
-    
+
+    /* Слой 3: Неоновое кольцо по центру */
     body::after {
-        max-width: 100%;
-        max-height: 400px;
+        content: "";
+        position: fixed;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        width: 100%;
+        max-width: 800px;
+        height: 100%;
+        max-height: 600px;
+        background: url('assets/images/neon_ring_transparent%20.PNG') no-repeat center center;
         background-size: contain;
+        pointer-events: none;
+        z-index: 2;
+    }
+
+    /* Слой 4: Неоновая обводка по периметру (поверх всего) */
+    html::after {
+        content: "";
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: url('assets/images/neon_stroke_transparent%20.PNG') no-repeat center center;
+        background-size: 100% 100%;
+        pointer-events: none;
+        z-index: 1000;
+    }
+}
+
+/* ===== МОБИЛЬНАЯ ВЕРСИЯ: ТОЛЬКО ФОН ===== */
+@media (max-width: 768px) {
+    body::before,
+    body::after,
+    html::after {
+        display: none;
     }
 }
 
@@ -820,127 +817,6 @@ a {
 
 /* ===== АДАПТИВ ДЛЯ МОБИЛЬНЫХ ===== */
 @media (max-width: 768px) {
-    body::before {
-        max-width: 100%;
-        max-height: 600px;
-        background-size: contain;
-    }
-    
-    body::after {
-        max-width: 100%;
-        max-height: 400px;
-        background-size background-size: contain: contain;
-   ;
-    }
-    
-    . }
-    
-    .search-sectionsearch-section,
-    .calculator,
-    .calculator-block,
-    .-block,
-    .watchedwatched-section-comp-section-compact,
-act,
-    .    .movie-cardmovie-card {
-        max-width {
-       :  max-width: 100%;
-100%;
-        padding        padding: : 20px20px;
-    }
-    
-    .;
-    }
-    
-    .movie-cardmovie-card {
-        {
-        flex-direction flex-direction: column;
-   : column;
-    }
-    
- }
-    
-    .    .movie-pmovie-poster {
-oster {
-        width        width: : 100%;
-100%;
-        max        max-width:-width: 200 200px;
-px;
-        margin        margin: 0 auto;
-    }
-    
-    .movie-title: 0 auto;
-    }
-    
-    .movie-title {
-        {
-        font-size font-size: 1.: 1.5rem5rem;
-       ;
-        text-align text-align: center: center;
-   ;
-    }
-    
- }
-    
-       .movie-meta {
- .movie-meta {
-        justify        justify-content: center;
--content:    center;
- }
-    }
-    
-       
-    .movie .movie-ratings {
--rat        justifyings {
-        justify-content:-content: center;
- center;
-        flex-wrap:        flex-wrap: wrap wrap;
-    }
-;
-    }
-    
-       
-    .search-box {
- .search-box {
-        flex        flex-direction:-direction: column;
- column;
-    }
-    
-       }
-    
-    .search .search-btn {
--btn {
-        padding:         padding: 16px16px;
-    }
-    
-;
-    }
-    
-    .    .copy-boxcopy-box {
-        {
-        flex-direction: column flex-direction: column;
-   ;
-    }
-    
- }
-    
-    .    .logo {
-        fontlogo {
--size:        font-size: 1 1.6rem;
-.6rem;
-        justify        justify-content:-content: center;
- center;
-        text-align:        text center;
--align: center;
-    }
-    }
-    
-       
-    .social .social-grid {
-        flex-grid {
-        flex-wrap:-wrap: wrap;
- wrap;
-    }
-} 
     .search-section,
     .calculator-block,
     .watched-section-compact,
