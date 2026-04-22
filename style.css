@@ -23,13 +23,13 @@ body {
 
 /* ===== ПК-ВЕРСИЯ: ВСЕ СЛОИ ===== */
 @media (min-width: 769px) {
-    /* Слой 2: Паттерн по центру */
+    /* Слой 2: Паттерн по центру (увеличен в 1.5 раза) */
     body::before {
         content: "";
         position: fixed;
         top: 50%;
         left: 50%;
-        transform: translate(-50%, -50%);
+        transform: translate(-50%, -50%) scale(1.5);
         width: 100%;
         max-width: 1200px;
         height: 100%;
@@ -41,13 +41,13 @@ body {
         opacity: 0.7;
     }
 
-    /* Слой 3: Неоновое кольцо по центру */
+    /* Слой 3: Неоновое кольцо по центру (увеличено в 1.5 раза) */
     body::after {
         content: "";
         position: fixed;
         top: 50%;
         left: 50%;
-        transform: translate(-50%, -50%);
+        transform: translate(-50%, -50%) scale(1.5);
         width: 100%;
         max-width: 800px;
         height: 100%;
@@ -58,7 +58,7 @@ body {
         z-index: 2;
     }
 
-    /* Слой 4: Неоновая обводка по периметру (поверх всего) */
+    /* Слой 4: Неоновая обводка по периметру (закреплена поверх всего, не двигается) */
     html::after {
         content: "";
         position: fixed;
