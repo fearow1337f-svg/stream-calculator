@@ -197,7 +197,6 @@
         });
     }
 
-    // ===== ПРОВЕРКА СТАТУСА СТРИМЕРА (ИСПРАВЛЕНО) =====
     async function checkStreamStatus() {
         const statusEl = document.getElementById('streamStatus');
         if (!statusEl) return;
@@ -205,12 +204,9 @@
         const channel = 'dy2phoria';
         
         try {
-            // Используем стабильный сервис Decapi вместо Twitch API
             const response = await fetch(`https://decapi.me/twitch/uptime?channel=${channel}`);
             const data = await response.text();
             
-            // Если стрим онлайн, Decapi возвращает время работы (например, "2 hours 15 minutes")
-            // Если офлайн — возвращает "offline"
             if (data && !data.includes('offline') && data.trim() !== '') {
                 statusEl.classList.add('online');
                 statusEl.classList.remove('offline', 'unknown');
@@ -220,8 +216,7 @@
                 statusEl.classList.remove('online', 'unknown');
                 statusEl.title = 'Офлайн';
             }
-        } catch (error) {
-            console.warn('Не удалось проверить статус стримера:', error);
+        } catch {
             statusEl.classList.add('unknown');
             statusEl.classList.remove('online', 'offline');
             statusEl.title = 'Статус неизвестен';
