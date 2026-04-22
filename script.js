@@ -317,12 +317,13 @@ function displayKinopoiskItem(item) {
     calcRating.textContent = rating;
     
     movieImdbLink.href = `https://www.imdb.com/find?q=${encodeURIComponent(item.nameRu || item.nameOriginal || '')}`;
+    movieImdbLink.innerHTML = `IMDb <span id="movieImdb">${rating}</span>`;
     movieKpLink.href = `https://www.kinopoisk.ru/film/${item.kinopoiskId}/`;
-    movieWikiLink.style.display = 'inline-flex';
+    movieKpLink.style.display = 'inline-flex';
+    if (movieWikiLink) movieWikiLink.style.display = 'inline-flex';
     
     movieOverview.textContent = item.description || item.slogan || 'Описание отсутствует.';
     
-    // Настройка калькулятора
     document.querySelector('.calculator-title').textContent = currentType === 'FILM' ? '🧮 КАЛЬКУЛЯЦИЯ: Фильм' : '🧮 КАЛЬКУЛЯЦИЯ: Сериал';
     document.querySelector('.calc-row:first-child .calc-label').textContent = currentType === 'FILM' ? 'Базовая стоимость' : 'Базовая стоимость серии';
     episodesRow.classList.toggle('hidden', currentType !== 'TV_SERIES');
@@ -359,12 +360,11 @@ function displayRAWGGame(game) {
     movieImdb.textContent = rating;
     calcRating.textContent = rating;
     
-    // Исправлено: меняем только href и текст внутри ссылки, сохраняя структуру
     movieImdbLink.href = `https://www.metacritic.com/game/${game.slug}`;
     movieImdbLink.innerHTML = `Metacritic <span id="movieImdb">${rating}</span>`;
     
     movieKpLink.style.display = 'none';
-    movieWikiLink.style.display = 'none';
+    if (movieWikiLink) movieWikiLink.style.display = 'none';
     
     movieOverview.textContent = game.description_raw || 'Описание отсутствует.';
     
