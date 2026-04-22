@@ -23,6 +23,20 @@ body {
     }
 }
 
+/* ===== НЕОНОВАЯ РАМКА ПОВЕРХ КОНТЕНТА ===== */
+body::after {
+    content: "";
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: url('assets/images/neon_stroke_transparent%20.PNG') no-repeat center center;
+    background-size: 100% 100%;
+    pointer-events: none;
+    z-index: 1000;
+}
+
 .container {
     max-width: 1200px;
     margin: 0 auto;
