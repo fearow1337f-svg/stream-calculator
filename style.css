@@ -58,6 +58,38 @@ body {
         z-index: 2;
     }
 
+    /* Слой 4: Неоновая обводка по периметру ЭКРАНА (fixed, не двигается) */
+    html::after {
+        content: "";
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: url('assets/images/neon_stroke_transparent%20.PNG') no-repeat center center;
+        background-size: 100% 100%;
+        pointer-events: none;
+        z-index: 1000;
+    }
+}
+
+    /* Слой 3: Неоновое кольцо по центру (увеличено в 1.5 раза) */
+    body::after {
+        content: "";
+        position: fixed;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%) scale(1.5);
+        width: 100%;
+        max-width: 800px;
+        height: 100%;
+        max-height: 600px;
+        background: url('assets/images/neon_ring_transparent%20.PNG') no-repeat center center;
+        background-size: contain;
+        pointer-events: none;
+        z-index: 2;
+    }
+
     /* Слой 4: Неоновая обводка — теперь позади контента, но поверх фона */
     .container::before {
         content: "";
