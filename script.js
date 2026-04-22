@@ -359,8 +359,10 @@ function displayRAWGGame(game) {
     movieImdb.textContent = rating;
     calcRating.textContent = rating;
     
+    // Исправлено: меняем только href и текст внутри ссылки, сохраняя структуру
     movieImdbLink.href = `https://www.metacritic.com/game/${game.slug}`;
-    movieImdbLink.textContent = 'Metacritic';
+    movieImdbLink.innerHTML = `Metacritic <span id="movieImdb">${rating}</span>`;
+    
     movieKpLink.style.display = 'none';
     movieWikiLink.style.display = 'none';
     
