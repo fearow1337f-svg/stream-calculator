@@ -1,19 +1,22 @@
-// ===== НАСТРОЙКИ =====
-// Рабочий API-ключ от kinopoiskapiunofficial.tech
-const API_KEY = '3c6501fb-0e64-4d38-9df9-18509d27395e';
-// Базовый URL API Кинопоиска
-const BASE_URL = 'https://kinopoiskapiunofficial.tech/api/v2.2';
-// База постеров TMDB (только для картинок, API не используется)
+// ===== НАСТРОЙКИ API =====
+const KP_API_KEY = '3c6501fb-0e64-4d38-9df9-18509d27395e';
+const KP_BASE_URL = 'https://kinopoiskapiunofficial.tech/api/v2.2';
+const RAWG_API_KEY = '7211c3c360a74c3180735f9b8ded07bc';
+const RAWG_BASE_URL = 'https://api.rawg.io/api';
 const TMDB_IMAGE_BASE = 'https://image.tmdb.org/t/p/w500';
 
 const STREAMER_NICKNAME = 'Dy2phoria';
 
+// ===== НАСТРОЙКИ ЦЕН (по умолчанию, перезаписываются из JSON) =====
 let BASE_PRICE = 500;
 let LONG_MOVIE_SURCHARGE = 20;
 let SERIES_BASE_PRICE = 200;
-let currentType = 'FILM'; // 'FILM' или 'TV_SERIES'
+let GAME_BASE_PRICE = 600;
+let GAME_HOUR_SURCHARGE = 50;
 
-// ===== ЗАГРУЗКА НАСТРОЕК ИЗ JSON =====
+let currentType = 'FILM'; // 'FILM', 'TV_SERIES', 'GAME'
+
+// ===== ЗАГРУЗКА НАСТРОЕК =====
 async function loadPricingSettings() {
     try {
         const response = await fetch('/_data/settings/pricing.json');
@@ -23,13 +26,11 @@ async function loadPricingSettings() {
         BASE_PRICE = data.basePrice || 500;
         LONG_MOVIE_SURCHARGE = data.longMovieSurcharge || 20;
         SERIES_BASE_PRICE = data.seriesBasePrice || 200;
+        GAME_BASE_PRICE = data.gameBasePrice || 600;
+        GAME_HOUR_SURCHARGE = data.gameHourSurcharge || 50;
         
-        const basePriceDisplay = document.getElementById('basePriceDisplay');
-        if (basePriceDisplay) {
-            basePriceDisplay.textContent = `${BASE_PRICE} ₽`;
-        }
-        
-        console.log('✅ Настройки цен загружены:', { BASE_PRICE, LONG_MOVIE_SURCHARGE, SERIES_BASE_PRICE });
+        updateBasePriceDisplay();
+        console.log('✅ Настройки цен загружены:', { BASE_PRICE, LONG_MOVIE_SURCHARGE, SERIES_BASE_PRICE, GAME_BASE_PRICE, GAME_HOUR_SURCHARGE });
     } catch (error) {
         console.warn('⚠️ Используются стандартные цены:', error);
     }
@@ -41,6 +42,7 @@ const searchBtn = document.getElementById('searchBtn');
 const movieCard = document.getElementById('movieCard');
 const calculatorBlock = document.getElementById('calculatorBlock');
 const errorMessage = document.getElementById('errorMessage');
+const errorText = document.getElementById('errorText');
 
 const moviePoster = document.getElementById('moviePoster');
 const movieTitle = document.getElementById('movieTitle');
@@ -50,10 +52,12 @@ const movieCountry = document.getElementById('movieCountry');
 const movieImdb = document.getElementById('movieImdb');
 const movieImdbLink = document.getElementById('movieImdbLink');
 const movieKpLink = document.getElementById('movieKpLink');
+const movieWikiLink = document.getElementById('movieWikiLink');
 const movieOverview = document.getElementById('movieOverview');
 
 const calcRating = document.getElementById('calcRating');
 const calcDurationMins = document.getElementById('calcDurationMins');
+const durationLabel = document.getElementById('durationLabel');
 const ratingAdjustment = document.getElementById('ratingAdjustment');
 const durationAdjustment = document.getElementById('durationAdjustment');
 const totalPrice = document.getElementById('totalPrice');
@@ -61,12 +65,12 @@ const priorityCheckbox = document.getElementById('priorityCheckbox');
 const donateText = document.getElementById('donateText');
 const copyBtn = document.getElementById('copyBtn');
 
-// Элементы для сериалов
 const episodesRow = document.getElementById('episodesRow');
 const episodesCount = document.getElementById('episodesCount');
 
-let currentMovie = null;
+let currentItem = null;
 
+// ===== ВСПОМОГАТЕЛЬНЫЕ ФУНКЦИИ =====
 function formatDuration(minutes) {
     if (!minutes) return '? мин';
     const hours = Math.floor(minutes / 60);
@@ -75,28 +79,53 @@ function formatDuration(minutes) {
     return `${mins} мин`;
 }
 
+function formatHours(hours) {
+    if (!hours) return '? ч';
+    return `${hours} ч`;
+}
+
 function formatMoney(amount) {
     return amount.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ' ');
 }
 
+function updateBasePriceDisplay() {
+    const baseValue = document.getElementById('basePriceDisplay');
+    if (!baseValue) return;
+    
+    if (currentType === 'FILM') baseValue.textContent = `${BASE_PRICE} ₽`;
+    else if (currentType === 'TV_SERIES') baseValue.textContent = `${SERIES_BASE_PRICE} ₽`;
+    else if (currentType === 'GAME') baseValue.textContent = `${GAME_BASE_PRICE} ₽`;
+}
+
+// ===== РАСЧЁТ ЦЕНЫ =====
 function calculatePrice() {
-    if (!currentMovie) return;
+    if (!currentItem) return;
     
-    const isSeries = currentMovie.type === 'TV_SERIES' || currentMovie.type === 'TV_SHOW' || currentMovie.type === 'MINI_SERIES';
-    
-    let price = isSeries ? SERIES_BASE_PRICE : BASE_PRICE;
-    const duration = currentMovie.filmLength || 0;
+    let price = 0;
     let durationExtra = 0;
     let episodes = 1;
     
-    if (!isSeries && duration > 120) {
-        durationExtra = LONG_MOVIE_SURCHARGE;
-        price += durationExtra;
-    }
-    
-    if (isSeries && episodesCount) {
-        episodes = parseInt(episodesCount.value) || 1;
+    if (currentType === 'FILM') {
+        price = BASE_PRICE;
+        const duration = currentItem.filmLength || 0;
+        if (duration > 120) {
+            durationExtra = LONG_MOVIE_SURCHARGE;
+            price += durationExtra;
+        }
+        durationAdjustment.textContent = `+${durationExtra} ₽`;
+    } else if (currentType === 'TV_SERIES') {
+        price = SERIES_BASE_PRICE;
+        episodes = parseInt(episodesCount?.value) || 1;
         price = price * episodes;
+        durationAdjustment.textContent = '—';
+    } else if (currentType === 'GAME') {
+        price = GAME_BASE_PRICE;
+        const playtime = currentItem.playtime || 0;
+        if (playtime > 0) {
+            durationExtra = playtime * GAME_HOUR_SURCHARGE;
+            price += durationExtra;
+        }
+        durationAdjustment.textContent = `+${durationExtra} ₽`;
     }
     
     if (priorityCheckbox.checked) {
@@ -104,20 +133,26 @@ function calculatePrice() {
     }
     
     ratingAdjustment.textContent = `+0 ₽`;
-    durationAdjustment.textContent = isSeries ? '—' : `+${durationExtra} ₽`;
     totalPrice.textContent = `${formatMoney(price)} ₽`;
     
-    const movieName = currentMovie.nameRu || currentMovie.nameOriginal || 'Фильм';
+    const itemName = currentItem.nameRu || currentItem.nameOriginal || currentItem.name || 'Без названия';
     const priorityText = priorityCheckbox.checked ? ' (ВНЕ ОЧЕРЕДИ)' : '';
-    const episodesText = isSeries ? ` — ${episodes} серий` : '';
+    let detailsText = '';
     
-    donateText.value = `${movieName}${episodesText}${priorityText}`;
+    if (currentType === 'TV_SERIES') {
+        detailsText = ` — ${episodes} серий`;
+    } else if (currentType === 'GAME') {
+        const playtime = currentItem.playtime || 0;
+        detailsText = ` — ${playtime} ч`;
+    }
+    
+    donateText.value = `${itemName}${detailsText}${priorityText}`;
 }
 
-// Поиск фильма — теперь показывает список, если результатов больше одного
-async function searchMovie(query) {
+// ===== ПОИСК =====
+async function search(query) {
     if (!query || query.length < 2) {
-        showError('Введи хотя бы 2 буквы');
+        showError('Введи хотя бы 2 символа');
         return;
     }
     
@@ -128,35 +163,10 @@ async function searchMovie(query) {
     hideMovieList();
     
     try {
-        const url = new URL(BASE_URL + '/films');
-        url.searchParams.append('keyword', query);
-        url.searchParams.append('page', '1');
-        url.searchParams.append('type', currentType);
-        
-        const response = await fetch(url.toString(), {
-            method: 'GET',
-            headers: {
-                'X-API-KEY': API_KEY,
-                'accept': 'application/json'
-            }
-        });
-        
-        if (!response.ok) throw new Error(`Ошибка ${response.status}`);
-        
-        const data = await response.json();
-        
-        if (data.items && data.items.length > 0) {
-            if (data.items.length === 1) {
-                const film = data.items[0];
-                await enrichMovieData(film);
-                displayMovie(film);
-                hideMovieList();
-            } else {
-                renderMovieList(data.items);
-            }
-            hideError();
-        } else {
-            showError('Ничего не найдено. Попробуй другое название.');
+        if (currentType === 'FILM' || currentType === 'TV_SERIES') {
+            await searchKinopoisk(query);
+        } else if (currentType === 'GAME') {
+            await searchRAWG(query);
         }
     } catch (error) {
         console.error('Ошибка:', error);
@@ -167,120 +177,103 @@ async function searchMovie(query) {
     }
 }
 
-// Отображение списка фильмов
-function renderMovieList(movies) {
-    const oldList = document.getElementById('movieList');
-    if (oldList) oldList.remove();
+async function searchKinopoisk(query) {
+    const url = new URL(KP_BASE_URL + '/films');
+    url.searchParams.append('keyword', query);
+    url.searchParams.append('page', '1');
+    url.searchParams.append('type', currentType);
     
-    const listContainer = document.createElement('div');
-    listContainer.id = 'movieList';
-    listContainer.className = 'movie-list';
-    
-    const title = document.createElement('h3');
-    title.className = 'movie-list-title';
-    title.textContent = `Найдено ${movies.length}:`;
-    listContainer.appendChild(title);
-    
-    const grid = document.createElement('div');
-    grid.className = 'movie-list-grid';
-    
-    movies.forEach(movie => {
-        const card = document.createElement('div');
-        card.className = 'movie-list-card';
-        
-        const year = movie.year || '????';
-        const poster = movie.posterUrlPreview || movie.posterUrl || '';
-        const type = movie.type === 'TV_SERIES' ? '📺' : '🎬';
-        
-        card.innerHTML = `
-            ${poster ? `<img src="${poster}" alt="${movie.nameRu}" class="movie-list-poster">` : ''}
-            <div class="movie-list-info">
-                <div class="movie-list-name">${type} ${movie.nameRu || movie.nameOriginal || 'Без названия'}</div>
-                <div class="movie-list-year">${year}</div>
-            </div>
-        `;
-        
-        card.addEventListener('click', async () => {
-            searchBtn.textContent = '⏳';
-            searchBtn.disabled = true;
-            
-            await enrichMovieData(movie);
-            displayMovie(movie);
-            hideMovieList();
-            
-            searchBtn.textContent = 'НАЙТИ';
-            searchBtn.disabled = false;
-        });
-        
-        grid.appendChild(card);
+    const response = await fetch(url.toString(), {
+        headers: { 'X-API-KEY': KP_API_KEY, 'accept': 'application/json' }
     });
     
-    listContainer.appendChild(grid);
+    if (!response.ok) throw new Error(`Ошибка ${response.status}`);
     
-    const searchSection = document.querySelector('.search-section');
-    searchSection.parentNode.insertBefore(listContainer, searchSection.nextSibling);
+    const data = await response.json();
+    
+    if (data.items && data.items.length > 0) {
+        if (data.items.length === 1) {
+            const item = data.items[0];
+            await enrichKinopoiskData(item);
+            displayKinopoiskItem(item);
+        } else {
+            renderKinopoiskList(data.items);
+        }
+    } else {
+        showError('Ничего не найдено');
+    }
 }
 
-function hideMovieList() {
-    const list = document.getElementById('movieList');
-    if (list) list.remove();
+async function searchRAWG(query) {
+    const url = new URL(RAWG_BASE_URL + '/games');
+    url.searchParams.append('key', RAWG_API_KEY);
+    url.searchParams.append('search', query);
+    url.searchParams.append('page_size', '20');
+    
+    const response = await fetch(url.toString());
+    
+    if (!response.ok) throw new Error(`Ошибка ${response.status}`);
+    
+    const data = await response.json();
+    
+    if (data.results && data.results.length > 0) {
+        if (data.results.length === 1) {
+            const game = data.results[0];
+            await enrichRAWGGame(game);
+            displayRAWGGame(game);
+        } else {
+            renderRAWGList(data.results);
+        }
+    } else {
+        showError('Игры не найдены');
+    }
 }
 
-async function enrichMovieData(film) {
+// ===== ОБОГАЩЕНИЕ ДАННЫХ =====
+async function enrichKinopoiskData(item) {
     try {
-        const url = new URL(BASE_URL + `/films/${film.kinopoiskId}`);
+        const url = new URL(KP_BASE_URL + `/films/${item.kinopoiskId}`);
         const response = await fetch(url.toString(), {
-            headers: {
-                'X-API-KEY': API_KEY,
-                'accept': 'application/json'
-            }
+            headers: { 'X-API-KEY': KP_API_KEY, 'accept': 'application/json' }
         });
-        
         if (response.ok) {
             const details = await response.json();
-            film.filmLength = details.filmLength;
-            film.countries = details.countries;
-            film.description = details.description;
-            film.slogan = details.slogan;
+            item.filmLength = details.filmLength;
+            item.countries = details.countries;
+            item.description = details.description;
+            item.slogan = details.slogan;
         }
     } catch (error) {
-        console.warn('Не удалось загрузить детали фильма:', error);
-        film.filmLength = film.filmLength || 0;
+        console.warn('Не удалось загрузить детали:', error);
+        item.filmLength = item.filmLength || 0;
     }
 }
 
-function displayMovie(film) {
-    currentMovie = film;
-    
-    const isSeries = film.type === 'TV_SERIES' || film.type === 'TV_SHOW' || film.type === 'MINI_SERIES';
-    
-    // Показываем или скрываем поле количества серий
-    if (episodesRow) {
-        episodesRow.classList.toggle('hidden', !isSeries);
-        if (isSeries && episodesCount) episodesCount.value = 1;
+async function enrichRAWGGame(game) {
+    try {
+        const url = new URL(RAWG_BASE_URL + `/games/${game.id}`);
+        url.searchParams.append('key', RAWG_API_KEY);
+        const response = await fetch(url.toString());
+        if (response.ok) {
+            const details = await response.json();
+            game.playtime = details.playtime;
+            game.description_raw = details.description_raw;
+            game.platforms = details.platforms;
+            game.metacritic = details.metacritic;
+        }
+    } catch (error) {
+        console.warn('Не удалось загрузить детали игры:', error);
     }
-    
-    // Меняем заголовок калькулятора
-    const calculatorTitle = document.querySelector('.calculator-title');
-    if (calculatorTitle) {
-        calculatorTitle.textContent = isSeries ? '🧮 КАЛЬКУЛЯЦИЯ: Сериал' : '🧮 КАЛЬКУЛЯЦИЯ: Фильм';
-    }
-    
-    // Меняем текст базовой стоимости и её значение
-    const baseLabel = document.querySelector('.calc-row:first-child .calc-label');
-    const baseValue = document.getElementById('basePriceDisplay');
-    
-    if (baseLabel) {
-        baseLabel.textContent = isSeries ? 'Базовая стоимость серии' : 'Базовая стоимость';
-    }
-    if (baseValue) {
-        baseValue.textContent = `${isSeries ? SERIES_BASE_PRICE : BASE_PRICE} ₽`;
-    }
+}
+
+// ===== ОТОБРАЖЕНИЕ =====
+function displayKinopoiskItem(item) {
+    currentItem = item;
     
     // Постер
-    if (film.kinopoiskId) {
-        fetch(`https://kinopoiskapiunofficial.tech/api/v2.2/films/${film.kinopoiskId}/external_sources`, {
-            headers: { 'X-API-KEY': API_KEY }
+    if (item.kinopoiskId) {
+        fetch(`${KP_BASE_URL}/films/${item.kinopoiskId}/external_sources`, {
+            headers: { 'X-API-KEY': KP_API_KEY }
         })
         .then(res => res.json())
         .then(data => {
@@ -296,7 +289,7 @@ function displayMovie(film) {
                         }
                     })
                     .catch(() => {
-                        moviePoster.src = film.posterUrl || film.posterUrlPreview || '';
+                        moviePoster.src = item.posterUrl || item.posterUrlPreview || '';
                         moviePoster.style.display = moviePoster.src ? 'block' : 'none';
                     });
             } else {
@@ -304,36 +297,183 @@ function displayMovie(film) {
             }
         })
         .catch(() => {
-            moviePoster.src = film.posterUrl || film.posterUrlPreview || '';
+            moviePoster.src = item.posterUrl || item.posterUrlPreview || '';
             moviePoster.style.display = moviePoster.src ? 'block' : 'none';
         });
-    } else {
-        moviePoster.src = film.posterUrl || film.posterUrlPreview || '';
-        moviePoster.style.display = moviePoster.src ? 'block' : 'none';
     }
     
-    movieTitle.textContent = film.nameRu || film.nameOriginal || 'Без названия';
-    movieYear.textContent = film.year || '????';
+    movieTitle.textContent = item.nameRu || item.nameOriginal || 'Без названия';
+    movieYear.textContent = item.year || '????';
     
-    const duration = film.filmLength || 0;
-    movieDuration.textContent = isSeries ? '—' : formatDuration(duration);
-    calcDurationMins.textContent = isSeries ? 0 : duration;
+    const duration = item.filmLength || 0;
+    movieDuration.textContent = currentType === 'TV_SERIES' ? '—' : formatDuration(duration);
+    calcDurationMins.textContent = currentType === 'TV_SERIES' ? 0 : duration;
+    durationLabel.innerHTML = currentType === 'TV_SERIES' ? 'Длительность' : `Длительность (<span id="calcDurationMins">${duration}</span> мин.)`;
     
-    movieCountry.textContent = film.countries?.[0]?.country || '—';
+    movieCountry.textContent = item.countries?.[0]?.country || '—';
     
-    const rating = film.ratingKinopoisk?.toFixed(1) || '0.0';
+    const rating = item.ratingKinopoisk?.toFixed(1) || '0.0';
     movieImdb.textContent = rating;
     calcRating.textContent = rating;
     
-    movieImdbLink.href = `https://www.imdb.com/find?q=${encodeURIComponent(film.nameRu || film.nameOriginal || '')}`;
-    movieKpLink.href = `https://www.kinopoisk.ru/film/${film.kinopoiskId}/`;
+    movieImdbLink.href = `https://www.imdb.com/find?q=${encodeURIComponent(item.nameRu || item.nameOriginal || '')}`;
+    movieKpLink.href = `https://www.kinopoisk.ru/film/${item.kinopoiskId}/`;
+    movieWikiLink.style.display = 'inline-flex';
     
-    movieOverview.textContent = film.description || film.slogan || 'Описание отсутствует.';
+    movieOverview.textContent = item.description || item.slogan || 'Описание отсутствует.';
     
+    // Настройка калькулятора
+    document.querySelector('.calculator-title').textContent = currentType === 'FILM' ? '🧮 КАЛЬКУЛЯЦИЯ: Фильм' : '🧮 КАЛЬКУЛЯЦИЯ: Сериал';
+    document.querySelector('.calc-row:first-child .calc-label').textContent = currentType === 'FILM' ? 'Базовая стоимость' : 'Базовая стоимость серии';
+    episodesRow.classList.toggle('hidden', currentType !== 'TV_SERIES');
+    if (currentType === 'TV_SERIES' && episodesCount) episodesCount.value = 1;
+    
+    updateBasePriceDisplay();
     movieCard.classList.remove('hidden');
     calculatorBlock.classList.remove('hidden');
-    
     calculatePrice();
+}
+
+function displayRAWGGame(game) {
+    currentItem = game;
+    
+    if (game.background_image) {
+        moviePoster.src = game.background_image;
+        moviePoster.style.display = 'block';
+    } else {
+        moviePoster.style.display = 'none';
+    }
+    
+    movieTitle.textContent = game.name || 'Без названия';
+    movieYear.textContent = game.released ? game.released.split('-')[0] : '????';
+    
+    const playtime = game.playtime || 0;
+    movieDuration.textContent = formatHours(playtime);
+    calcDurationMins.textContent = playtime;
+    durationLabel.innerHTML = `Время прохождения (<span id="calcDurationMins">${playtime}</span> ч)`;
+    
+    const platforms = game.platforms?.map(p => p.platform.name).join(', ') || '—';
+    movieCountry.textContent = platforms;
+    
+    const rating = game.metacritic || game.rating?.toFixed(1) || '0.0';
+    movieImdb.textContent = rating;
+    calcRating.textContent = rating;
+    
+    movieImdbLink.href = `https://www.metacritic.com/game/${game.slug}`;
+    movieImdbLink.textContent = 'Metacritic';
+    movieKpLink.style.display = 'none';
+    movieWikiLink.style.display = 'none';
+    
+    movieOverview.textContent = game.description_raw || 'Описание отсутствует.';
+    
+    document.querySelector('.calculator-title').textContent = '🧮 КАЛЬКУЛЯЦИЯ: Игра';
+    document.querySelector('.calc-row:first-child .calc-label').textContent = 'Базовая стоимость игры';
+    episodesRow.classList.add('hidden');
+    
+    updateBasePriceDisplay();
+    movieCard.classList.remove('hidden');
+    calculatorBlock.classList.remove('hidden');
+    calculatePrice();
+}
+
+// ===== СПИСКИ =====
+function renderKinopoiskList(items) {
+    const oldList = document.getElementById('movieList');
+    if (oldList) oldList.remove();
+    
+    const container = document.createElement('div');
+    container.id = 'movieList';
+    container.className = 'movie-list';
+    
+    const title = document.createElement('h3');
+    title.className = 'movie-list-title';
+    title.textContent = `Найдено ${items.length}:`;
+    container.appendChild(title);
+    
+    const grid = document.createElement('div');
+    grid.className = 'movie-list-grid';
+    
+    items.forEach(item => {
+        const card = document.createElement('div');
+        card.className = 'movie-list-card';
+        const year = item.year || '????';
+        const poster = item.posterUrlPreview || item.posterUrl || '';
+        const typeIcon = currentType === 'TV_SERIES' ? '📺' : '🎬';
+        
+        card.innerHTML = `
+            ${poster ? `<img src="${poster}" class="movie-list-poster">` : ''}
+            <div class="movie-list-info">
+                <div class="movie-list-name">${typeIcon} ${item.nameRu || item.nameOriginal || 'Без названия'}</div>
+                <div class="movie-list-year">${year}</div>
+            </div>
+        `;
+        
+        card.addEventListener('click', async () => {
+            searchBtn.textContent = '⏳';
+            searchBtn.disabled = true;
+            await enrichKinopoiskData(item);
+            displayKinopoiskItem(item);
+            hideMovieList();
+            searchBtn.textContent = 'НАЙТИ';
+            searchBtn.disabled = false;
+        });
+        
+        grid.appendChild(card);
+    });
+    
+    container.appendChild(grid);
+    document.querySelector('.search-section').parentNode.insertBefore(container, document.querySelector('.search-section').nextSibling);
+}
+
+function renderRAWGList(games) {
+    const oldList = document.getElementById('movieList');
+    if (oldList) oldList.remove();
+    
+    const container = document.createElement('div');
+    container.id = 'movieList';
+    container.className = 'movie-list';
+    
+    const title = document.createElement('h3');
+    title.className = 'movie-list-title';
+    title.textContent = `Найдено ${games.length}:`;
+    container.appendChild(title);
+    
+    const grid = document.createElement('div');
+    grid.className = 'movie-list-grid';
+    
+    games.forEach(game => {
+        const card = document.createElement('div');
+        card.className = 'movie-list-card';
+        const year = game.released ? game.released.split('-')[0] : '????';
+        
+        card.innerHTML = `
+            ${game.background_image ? `<img src="${game.background_image}" class="movie-list-poster">` : ''}
+            <div class="movie-list-info">
+                <div class="movie-list-name">🎮 ${game.name || 'Без названия'}</div>
+                <div class="movie-list-year">${year}</div>
+            </div>
+        `;
+        
+        card.addEventListener('click', async () => {
+            searchBtn.textContent = '⏳';
+            searchBtn.disabled = true;
+            await enrichRAWGGame(game);
+            displayRAWGGame(game);
+            hideMovieList();
+            searchBtn.textContent = 'НАЙТИ';
+            searchBtn.disabled = false;
+        });
+        
+        grid.appendChild(card);
+    });
+    
+    container.appendChild(grid);
+    document.querySelector('.search-section').parentNode.insertBefore(container, document.querySelector('.search-section').nextSibling);
+}
+
+function hideMovieList() {
+    const list = document.getElementById('movieList');
+    if (list) list.remove();
 }
 
 function hideMovieCard() {
@@ -342,7 +482,7 @@ function hideMovieCard() {
 }
 
 function showError(text) {
-    errorMessage.textContent = text.startsWith('❌') ? text : `❌ ${text}`;
+    errorText.textContent = text.startsWith('❌') ? text : `❌ ${text}`;
     errorMessage.classList.remove('hidden');
 }
 
@@ -363,42 +503,54 @@ function copyDonateText() {
     }
 }
 
-// Обработчики событий
-searchBtn.addEventListener('click', () => searchMovie(searchInput.value.trim()));
-searchInput.addEventListener('keypress', (e) => {
-    if (e.key === 'Enter') searchMovie(searchInput.value.trim());
-});
+// ===== ОБРАБОТЧИКИ =====
+searchBtn.addEventListener('click', () => search(searchInput.value.trim()));
+searchInput.addEventListener('keypress', (e) => { if (e.key === 'Enter') search(searchInput.value.trim()); });
 priorityCheckbox.addEventListener('change', calculatePrice);
 copyBtn.addEventListener('click', copyDonateText);
-
 if (episodesCount) {
     episodesCount.addEventListener('input', calculatePrice);
     episodesCount.addEventListener('change', calculatePrice);
 }
 
 // Переключатель типа контента
-const filmTypeBtn = document.getElementById('filmTypeBtn');
-const seriesTypeBtn = document.getElementById('seriesTypeBtn');
+const filmBtn = document.getElementById('filmTypeBtn');
+const seriesBtn = document.getElementById('seriesTypeBtn');
+const gameBtn = document.getElementById('gameTypeBtn');
 
-if (filmTypeBtn && seriesTypeBtn) {
-    filmTypeBtn.addEventListener('click', () => {
-        filmTypeBtn.classList.add('active');
-        seriesTypeBtn.classList.remove('active');
-        currentType = 'FILM';
-        document.querySelector('.section-subtitle').textContent = '# ЗАКАЗ ФИЛЬМОВ';
-        searchInput.placeholder = 'Поиск фильмов...';
-    });
+function setActiveType(type) {
+    currentType = type;
+    filmBtn.classList.toggle('active', type === 'FILM');
+    seriesBtn.classList.toggle('active', type === 'TV_SERIES');
+    gameBtn.classList.toggle('active', type === 'GAME');
     
-    seriesTypeBtn.addEventListener('click', () => {
-        seriesTypeBtn.classList.add('active');
-        filmTypeBtn.classList.remove('active');
-        currentType = 'TV_SERIES';
-        document.querySelector('.section-subtitle').textContent = '# ЗАКАЗ СЕРИАЛОВ';
+    const subtitle = document.querySelector('.section-subtitle');
+    const hint = document.querySelector('.search-hint');
+    
+    if (type === 'FILM') {
+        subtitle.textContent = '# ЗАКАЗ ФИЛЬМОВ';
+        searchInput.placeholder = 'Поиск фильмов...';
+        hint.textContent = 'Поиск по базе Кинопоиск';
+    } else if (type === 'TV_SERIES') {
+        subtitle.textContent = '# ЗАКАЗ СЕРИАЛОВ';
         searchInput.placeholder = 'Поиск сериалов...';
-    });
+        hint.textContent = 'Поиск по базе Кинопоиск';
+    } else {
+        subtitle.textContent = '# ЗАКАЗ ИГР';
+        searchInput.placeholder = 'Поиск игр...';
+        hint.textContent = 'Поиск по базе RAWG';
+    }
+    
+    updateBasePriceDisplay();
+    hideMovieCard();
+    hideMovieList();
 }
+
+filmBtn.addEventListener('click', () => setActiveType('FILM'));
+seriesBtn.addEventListener('click', () => setActiveType('TV_SERIES'));
+gameBtn.addEventListener('click', () => setActiveType('GAME'));
 
 window.addEventListener('DOMContentLoaded', async () => {
     await loadPricingSettings();
-    console.log('🎬 Калькулятор загружен! API: Кинопоиск + постеры TMDB');
+    console.log('🎬 Калькулятор загружен! API: Кинопоиск + RAWG + TMDB');
 });
