@@ -1,7 +1,7 @@
 {
   "basePrice": 500,
   "longMovieSurcharge": 50,
-  "seriesBasePrice": 200,
+  "seriesBasePrice": 350,
   "gameBasePrice": 1000,
   "gameHourSurcharge": 50
 }
